@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Değerlendirici Seçim Sistemi</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <h1>Değerlendirici Seçim Sistemi</h1>
+      <p class="sub">Değerlendirici başvurularının kriter setine göre analizi ve eğitim daveti önerisi</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- 1. Adım: Dosya yükleme -->
+    <section class="panel">
+      <h2>1. Başvuru Dosyası</h2>
+      <div id="dropzone" class="dropzone" role="button" tabindex="0"
+           aria-label="Excel dosyası yüklemek için tıklayın veya sürükleyip bırakın">
+        <p><strong>Excel dosyasını buraya sürükleyin</strong> ya da seçmek için tıklayın</p>
+        <p class="hint">Desteklenen biçimler: .xlsx, .xls, .csv — ilk çalışma sayfası okunur</p>
+      </div>
+      <input type="file" id="file-input" accept=".xlsx,.xls,.csv" hidden>
+      <div class="panel-actions">
+        <button id="btn-sample" type="button" class="btn btn-ghost">Örnek veriyle dene</button>
+      </div>
+      <div id="column-report" class="column-report" hidden></div>
+      <p class="kvkk">
+        <strong>Veri gizliliği:</strong> Yüklenen dosya hiçbir sunucuya gönderilmez; tüm analiz bu
+        tarayıcı penceresi içinde gerçekleştirilir. Sayfa kapatıldığında veriler silinir.
+        T.C. kimlik numaraları ekranda maskelenerek gösterilir.
+      </p>
+    </section>
+
+    <!-- 2. Adım: Kriterler -->
+    <section class="panel">
+      <h2>2. Kriter Seti</h2>
+      <p class="hint">Kriterler öntanımlı değerlerle gelir; ağırlıkları, zorunlu koşulları ve davet
+        parametrelerini düzenleyebilirsiniz. Değişiklikler tarayıcıda saklanır ve analiz otomatik yenilenir.</p>
+
+      <div class="crit-grid">
+        <fieldset>
+          <legend>Kriter Ağırlıkları</legend>
+          <p class="hint">Göreli değerlerdir; kişi bazında uygulanabilir kriterler üzerinden normalize edilir.</p>
+          <div id="weights"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Zorunlu (Eleyici) Koşullar</legend>
+          <label class="chk"><input type="checkbox" id="m-doktora"> Doktora / sanatta yeterlik şartı</label>
+          <div class="w-row">
+            <label for="m-unvan">Asgari akademik unvan</label>
+            <select id="m-unvan">
+              <option value="1">Prof.</option>
+              <option value="2">Doç.</option>
+              <option value="3">Dr. Öğr. Üyesi</option>
+              <option value="4">Öğr. Gör.</option>
+              <option value="5">Arş. Gör. (şart yok)</option>
+            </select>
+          </div>
+          <div class="w-row">
+            <label for="m-dil">Asgari yabancı dil puanı (100'lük; 0 = kapalı)</label>
+            <input type="number" id="m-dil" min="0" max="100" step="1">
+          </div>
+          <label class="chk"><input type="checkbox" id="m-idari-muaf"> İdari personel unvan/doktora şartından muaf</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Davet Parametreleri</legend>
+          <div class="w-row">
+            <label for="d-esik">Davet eşik puanı</label>
+            <input type="number" id="d-esik" min="0" max="100" step="1">
+          </div>
+          <div class="w-row">
+            <label for="d-band">Sınır bandı (eşiğin altı, incelemeli)</label>
+            <input type="number" id="d-band" min="0" max="50" step="1">
+          </div>
+          <div class="w-row">
+            <label for="d-kontenjan">Kontenjan (0 = sınırsız)</label>
+            <input type="number" id="d-kontenjan" min="0" step="1">
+          </div>
+          <div class="w-row">
+            <label for="s-bonus">Mevcut havuz bonusu (Secim = E)</label>
+            <input type="number" id="s-bonus" min="0" max="20" step="1">
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Hedef Temel Alanlar</legend>
+          <p class="hint">Seçim yapılmazsa alan uygunluğu kriteri devre dışı kalır ve ağırlığı diğer kriterlere dağıtılır.</p>
+          <div id="hedef-alanlar" class="alan-list"></div>
+        </fieldset>
+      </div>
+
+      <div class="panel-actions">
+        <button id="btn-reset-criteria" type="button" class="btn btn-ghost">Öntanımlıya dön</button>
+        <button id="btn-export-criteria" type="button" class="btn btn-ghost">Kriterleri indir (JSON)</button>
+        <label class="btn btn-ghost btn-file">Kriter dosyası yükle
+          <input type="file" id="criteria-file" accept=".json" hidden>
+        </label>
+      </div>
+    </section>
+
+    <!-- 3. Adım: Sonuçlar -->
+    <section class="panel" id="results-section" hidden>
+      <h2>3. Analiz Sonuçları</h2>
+      <div id="summary-cards" class="cards"></div>
+
+      <div class="table-toolbar">
+        <select id="f-durum" aria-label="Durum filtresi">
+          <option value="hepsi">Tüm durumlar</option>
+          <option value="davet">Davet Önerilir</option>
+          <option value="sinirda">Sınırda / İncelemeli</option>
+          <option value="uygun-degil">Uygun Değil</option>
+          <option value="eksik">Eksik Veri</option>
+        </select>
+        <select id="f-secim" aria-label="Seçim filtresi">
+          <option value="hepsi">Havuz + Yeni</option>
+          <option value="e">Mevcut havuz (E)</option>
+          <option value="y">Yeni başvuru (Y)</option>
+        </select>
+        <input type="search" id="f-arama" placeholder="Ad, üniversite veya alan ara…" aria-label="Arama">
+        <span id="table-count" class="hint"></span>
+        <button id="btn-export" type="button" class="btn btn-primary">Rapor İndir (Excel)</button>
+      </div>
+
+      <div class="table-scroll">
+        <table class="results">
+          <thead>
+            <tr>
+              <th>Sıra</th><th>TcNo</th><th>Ad Soyad</th><th>Üniversite</th>
+              <th>Unvan</th><th>Temel Alan</th><th>E/Y</th><th>Puan</th><th>Durum</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+
+      <p class="kvkk">
+        Bu araç kural tabanlı otomatik ön değerlendirme yapar; sonuçlar <em>öneri</em> niteliğindedir.
+        Eksik ya da çözümlenemeyen verisi bulunan başvurular ayrıca raporlanır ve elle inceleme gerektirir.
+        Nihai davet kararı yetkili komisyona aittir.
+      </p>
+    </section>
+  </main>
+
+  <!-- Aday detay penceresi -->
+  <div id="modal" class="modal" hidden>
+    <div class="modal-box" role="dialog" aria-modal="true">
+      <button id="modal-close" class="modal-close" type="button" aria-label="Kapat">×</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/lib/xlsx.full.min.js"></script>
+  <script src="js/criteria.js"></script>
+  <script src="js/textparse.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/report.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
