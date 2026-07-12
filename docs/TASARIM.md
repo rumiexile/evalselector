@@ -1,5 +1,12 @@
 # Değerlendirici Seçim Sistemi — Tasarım Dokümanı
 
+Uygulama iki modülden oluşur:
+
+1. **Değerlendirici Seçimi** — başvuruların kriter setine göre analizi ve
+   eğitim daveti önerisi (bu bölümde anlatılır).
+2. **Takım Oluşturma** — değerlendirme türüne göre şablon tabanlı,
+   rastlantısal takım kurulumu (bkz. [Bölüm 9](#9-modül-2-takım-oluşturma)).
+
 ## 1. Amaç
 
 Yükseköğretim kalite güvencesi süreçlerinde görev alacak değerlendirici
@@ -158,3 +165,92 @@ görünür — sistem sessizce 0 verip geçmez.
 - Bilim Alanı düzeyinde eşleştirme yapılmıyor; hedefleme Temel Alan
   düzeyindedir.
 - Çok sayfalı Excel dosyalarında yalnızca ilk sayfa okunur.
+
+## 9. Modül 2: Takım Oluşturma
+
+Değerlendirme dönemine ve türüne göre, YÖKAK "Değerlendirici Havuzu,
+Değerlendirme Takımlarının Oluşturulması ve Dış Değerlendiricilerin Görev
+İhmallerine Uygulanacak Yaptırımlara İlişkin Usul ve Esaslar" belgesindeki
+kuralları öntanımlı şablon değerleri olarak uygulayan takım kurma aracı.
+Havuz olarak 1. modülde yüklenen başvuru dosyası kullanılır; `Tip` sütununda
+**Öğrenci** değeri de tanınır (öğrenci değerlendiriciler için).
+
+### 9.1 Değerlendirme türleri ve şablonlar
+
+Öntanımlı türler: **KAP**, **Ara Değerlendirme**, **UKAP**, **UKAP İzleme**,
+**KDDP**. Arayüzden yeni tür tanımlanabilir (geleceğe dönük); yeni türler
+taban şablonla başlar ve düzenlenebilir.
+
+Şablon alanları ve Usul-Esaslar dayanakları:
+
+| Alan | Öntanımlı | Dayanak |
+|---|---|---|
+| Akademik üye sayısı (başkan hariç) | 3 (Ara/UKAP İzleme: 2) | Kurum büyüklüğüne göre takım (8/1-7) |
+| İdari değerlendirici bulunsun | Evet | Takımlarda akademik, idari, öğrenci zorunlu (8/3) |
+| Öğrenci değerlendirici bulunsun | Evet (Ara/UKAP İzleme: Hayır) | 8/3 |
+| Başkan asgari görev sayısı (TkBsk+AkdGor+IdrGor) | 3 | En az 3 kez dış değerlendirici (8/9) |
+| Asgari dil puanı (başkan + akademik) | 0; UKAP türlerinde 80 | Kullanıcı gereksinimi (UKAP dil düzeyi) |
+| İlk kez görev alacak üye: en az / en fazla | 1 / 2 | 8/8 (öğrenciler sayım dışı tutulur) |
+| Aynı üniversiteden en fazla bir üye | Açık | Coğrafi/alan dengesi (8/4) sadeleştirmesi |
+| Rol başına yedek sayısı | 1 | Kullanıcı gereksinimi |
+
+"İlk kez görev alacak" tespiti: `TkBsk + AkdGor + IdrGor = 0`.
+
+### 9.2 Kurum seçimi
+
+Türkiye'deki üniversiteler (devlet + vakıf, il ve tür bilgisiyle) uygulama
+içinde gömülüdür; arama ve tür filtresiyle seçilir. Listede olmayan kurumlar
+elle eklenebilir (ad, il, tür) ve eklenenler tarayıcıda saklanır. Bir kurum
+seçimden çıkarılırsa kurulmuş takımı da kaldırılır.
+
+### 9.3 Takım kurulumu ve değiştirme
+
+- **Otomatik (rastlantısal)**: şablon kriterlerini ve ÇÇ kontrolünü geçen
+  adaylar arasından rastgele seçim yapılır (8/5'teki rastlantısal yöntem).
+  Kurulum sırası: başkan → akademik üyeler (önce ilk kez görev alacaklardan
+  asgari sayı) → idari → öğrenci → rol bazında yedekler.
+- **Elle**: "Boş takım" ile koltuklar tek tek seçilir; her koltuğun yanındaki
+  **Değiştir/Seç** düğmesi, uygun adayları (gerekçeli elenenler listesiyle
+  birlikte) gösteren seçim penceresini açar.
+- **Yedekler**: rol bazında tutulur; "Asil yap" ile terfi ettirilir (dolu
+  koltuktaki önceki asil aynı rolün yedeğine alınır), "Çıkar" ile silinir.
+
+### 9.4 Çıkar çatışması/çakışması (MADDE 9)
+
+- **Otomatik**: adayın mensubu olduğu üniversite (metin normalize edilerek)
+  değerlendirilen kurumla eşleşiyorsa aday elenir.
+- **Elle beyan**: değerlendirici + kurum çifti olarak kaydedilir (mezuniyet,
+  danışmanlık, ailevi bağ vb.); hem seçim filtresinde hem takım
+  doğrulamasında uygulanır.
+- Kurum adı yazımı farklıysa (örn. kısaltma) otomatik eşleşme yakalanamaz;
+  bu durumlar elle beyanla yönetilir (arayüzde belirtilir).
+
+### 9.5 Doğrulama ve raporlama
+
+Her takım kartında canlı doğrulama gösterilir: boş koltuk, ÇÇ ihlali, rol
+kriteri ihlali, ilk kez görev aralığı, aynı üniversiteden birden fazla üye,
+dönem içinde birden fazla takımda asil görev. Dışa aktarma:
+
+- **Excel**: "Özet" (kurum başına durum ve uyarılar) + "Takımlar" (kişi
+  bazında rol, asil/yedek, kurum, dil puanı, ilk kez bilgisi).
+- **Çalışma dosyası (JSON)**: dönem, şablonlar, kurum seçimi, takımlar ve ÇÇ
+  beyanları; kaydet/yükle ile oturumlar arası taşınır.
+
+### 9.6 Veri gizliliği
+
+Takımlar ve ÇÇ beyanları kişisel veri (TcNo) içerdiğinden **yalnızca bellekte**
+tutulur; localStorage'a kişisel veri yazılmaz. Kalıcılık isteyen kullanıcı
+"Çalışmayı kaydet (JSON)" ile dosyayı kendisi indirir ve saklar. Kişisel veri
+içermeyen ayarlar (dönem adı, türler, şablonlar, kurum seçimi, elle eklenen
+kurumlar) tarayıcıda saklanır.
+
+### 9.7 Sınırlar
+
+- Cinsiyet dengesi (8/4) veri dosyasında cinsiyet alanı bulunmadığından
+  otomatik gözetilemez; coğrafi/alan dengesi "aynı üniversiteden tek üye"
+  kuralıyla yaklaşık sağlanır.
+- Gömülü üniversite listesi güncel YÖK listesinden küçük farklar içerebilir;
+  elle ekleme ile telafi edilir.
+- Sektör temsilcisi ve uluslararası uzman rolleri (8/3'te isteğe bağlı)
+  ayrı rol olarak modellenmemiştir; gerekirse akademik koltuk + elle seçim
+  ile yönetilebilir ya da ileride rol olarak eklenebilir.

@@ -1,9 +1,14 @@
 # Değerlendirici Seçim Sistemi
 
-Değerlendirici başvurularını içeren Excel dosyalarını belirlenmiş kriter
-setine göre analiz eden, eğitime davet edilecek adayları öneren ve uygun
-olmayan ya da eksik veriye sahip başvuruları raporlayan **tamamen tarayıcı
-içinde çalışan** web uygulaması.
+**Tamamen tarayıcı içinde çalışan**, iki modüllü web uygulaması:
+
+1. **Değerlendirici Seçimi** — başvuru Excel dosyasını kriter setine göre
+   analiz eder, eğitime davet edilecek adayları önerir, uygun olmayan ya da
+   eksik veriye sahip başvuruları raporlar.
+2. **Takım Oluşturma** — değerlendirme türüne (KAP, Ara Değerlendirme, UKAP,
+   UKAP İzleme, KDDP + kullanıcı tanımlı türler) göre şablon tabanlı
+   değerlendirme takımlarını **rastlantısal yöntemle** kurar; yedekleri,
+   çıkar çatışması kontrolünü ve üye değiştirmeyi destekler.
 
 ## Kullanım
 
@@ -17,6 +22,22 @@ Kurulum gerektirmez:
    kontenjanı ve hedef temel alanları düzenleyin; analiz otomatik yenilenir.
 4. **"Rapor İndir (Excel)"** ile Özet, Davet Önerilenler, Sınırda, Uygun
    Olmayanlar, Eksik Veri ve Tüm Sonuçlar sayfalarını içeren raporu alın.
+
+### Takım Oluşturma modülü
+
+1. Üstteki **"2 · Takım Oluşturma"** sekmesine geçin; dönem adını yazın ve
+   değerlendirme türünü seçin (yeni tür tanımlanabilir).
+2. Takım şablonunu gözden geçirin: akademik üye sayısı, idari/öğrenci
+   zorunluluğu, başkan görev kriteri, UKAP için asgari dil puanı, ilk kez
+   görev alacak üye aralığı, yedek sayısı.
+3. Gömülü listeden değerlendirilecek üniversiteleri seçin (eksik kurumlar
+   elle eklenebilir).
+4. **"Eksik takımları otomatik kur (rastlantısal)"** ile takımları kurun ya da
+   koltukları tek tek seçin; her üyenin yanındaki **Değiştir** düğmesi
+   yedekleri ve havuzdaki uygun adayları gösterir.
+5. Çıkar çatışması beyanlarını kaydedin; takım kartlarındaki canlı doğrulama
+   uyarılarını giderin ve **"Takımları indir (Excel)"** ile raporu alın.
+   Oturumlar arası devam için **"Çalışmayı kaydet (JSON)"** kullanın.
 
 ## Veri Gizliliği (KVKK)
 

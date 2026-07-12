@@ -235,6 +235,7 @@
     state.dosyaAdi = dosyaAdi;
     renderColumnReport();
     renderHedefAlanlar();
+    document.dispatchEvent(new CustomEvent("pool-updated"));
     if (info.eksik.indexOf("TcNo") !== -1 || info.eksik.indexOf("Ad") !== -1 ||
         info.eksik.indexOf("Soyad") !== -1 || info.eksik.indexOf("Tip") !== -1) {
       bildir("Zorunlu sütunlar eksik olduğu için analiz yapılamıyor. Lütfen dosya yapısını kontrol ediniz.", "err");
@@ -384,7 +385,18 @@
       ["99999999999","Dokuz Eylül Üniversitesi","Akademik","Enstitü Müdürü","Doç. Dr.","","Selin","Öztürk","Fen Bilimleri ve Matematik","Biyoloji",0,2,0,"Program değerlendirme komisyonu, kalite güvencesi çalışmaları","IELTS 7,5","Doktora 2012","Y"],
       ["10101010101","Marmara Üniversitesi","Akademik","Dekan Yardımcısı","Prof. Dr.","","Hasan","Güneş","Sosyal, Beşeri ve İdari Bilimler","İktisat",2,4,0,"Dış değerlendirme, KİDR, kalite komisyonu","ÜDS 88","Doktora 2004","E"],
       ["11111111111","Ankara Üniversitesi","Akademik","Dekan","Prof. Dr.","","Ayşe","Yılmaz","Fen Bilimleri ve Matematik","Kimya",3,5,1,"Mükerrer kayıt örneği","YDS 92,5","Doktora 1996","E"],
-      ["12121212121","Akdeniz Üniversitesi","Akademik","Bölüm Başkan Yardımcısı","","","Deniz","","Mimarlık, Planlama ve Tasarım","Mimarlık",0,1,0,"Akreditasyon çalışmaları","YDS 74","Doktora 2016","Y"]
+      ["12121212121","Akdeniz Üniversitesi","Akademik","Bölüm Başkan Yardımcısı","","","Deniz","","Mimarlık, Planlama ve Tasarım","Mimarlık",0,1,0,"Akreditasyon çalışmaları","YDS 74","Doktora 2016","Y"],
+      ["13131313131","Fırat Üniversitesi","Akademik","Dekan","Prof. Dr.","","Kemal","Yıldırım","Mühendislik","Elektrik-Elektronik Mühendisliği",4,6,0,"YÖKAK takım başkanlığı, kurumsal akreditasyon, MÜDEK değerlendiriciliği","YDS 89","Doktora 1998","E"],
+      ["14141414141","Erciyes Üniversitesi","Akademik","Enstitü Müdürü","Prof. Dr.","","Nurcan","Aksoy","Sağlık Bilimleri","Eczacılık",2,5,0,"Dış değerlendirme, kalite komisyonu başkanlığı, KİDR","YÖKDİL 86","Doktora 2001","E"],
+      ["15151515151","Pamukkale Üniversitesi","Akademik","Bölüm Başkanı","Doç. Dr.","","Okan","Erdoğan","Sosyal, Beşeri ve İdari Bilimler","Kamu Yönetimi",1,3,0,"YÖKAK dış değerlendirme, öz değerlendirme raporu yazımı","YDS 83","Doktora 2011","E"],
+      ["16161616161","Trakya Üniversitesi","Akademik","Anabilim Dalı Başkanı","Dr. Öğr. Üyesi","","Pınar","Kurt","Eğitim Bilimleri","Ölçme ve Değerlendirme",0,0,0,"Kalite güvencesi çalışma grubu üyeliği","YDS 81","Doktora 2019","Y"],
+      ["17171717171","Kocaeli Üniversitesi","Akademik","Bölüm Başkanı","Doç. Dr.","","Serkan","Polat","Mühendislik","Makine Mühendisliği",0,0,0,"","YDS 85","Doktora 2015","Y"],
+      ["18181818181","İnönü Üniversitesi","Akademik","Dekan Yardımcısı","Prof. Dr.","","Gülay","Tekin","Fen Bilimleri ve Matematik","Matematik",1,4,0,"Dış değerlendirme, program değerlendirme","KPDS 87","Doktora 2003","E"],
+      ["19191919191","Sakarya Üniversitesi","İdari","","","Kalite Koordinatörlüğü Şube Müdürü","Hakan","Doğan","","",0,2,3,"YÖKAK idari değerlendirici, ISO 9001 baş denetçi, KİDR hazırlama","YDS 72","Yüksek Lisans 2010","E"],
+      ["20202020202","Ondokuz Mayıs Üniversitesi","İdari","","","Öğrenci İşleri Daire Başkanı","Nesrin","Kaplan","","",0,0,0,"Kalite komisyonu raportörlüğü","","Lisans 2005","Y"],
+      ["21212121212","Ankara Üniversitesi","Öğrenci","","","","Berk","Yalçın","Sosyal, Beşeri ve İdari Bilimler","Hukuk",0,1,0,"YÖKAK öğrenci değerlendirici, kalite elçisi","YDS 78","Lisans öğrencisi (4. sınıf)","E"],
+      ["22222222223","Ege Üniversitesi","Öğrenci","","","","Ceren","Acar","Sağlık Bilimleri","Tıp",0,0,0,"Öğrenci kalite topluluğu başkanı","IELTS 7","Lisans öğrencisi (5. sınıf)","Y"],
+      ["23232323232","Gaziantep Üniversitesi","Öğrenci","","","","Umut","Sarı","Mühendislik","Endüstri Mühendisliği",0,0,0,"","YDS 66","Lisans öğrencisi (3. sınıf)","Y"]
     ];
     ingest([H].concat(D), "ornek-veri (uygulama içi)");
     bildir("Örnek veri yüklendi. Bu veri gerçek kişileri temsil etmez; yalnızca deneme amaçlıdır.", "ok");
@@ -420,6 +432,9 @@
     bindUpload();
     bindResults();
   }
+
+  // Takım oluşturma modülünün havuza salt-okunur erişimi
+  window.PoolAccess = { rows: function () { return state.rows || []; } };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
