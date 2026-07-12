@@ -178,11 +178,11 @@ Havuz olarak 1. modülde yüklenen başvuru dosyası kullanılır; `Tip` sütunu
 ### 9.1 Değerlendirme türleri ve şablonlar
 
 Öntanımlı türler: **KAP**, **KAP — Ara Değerlendirme**, **UKAP**,
-**UKAP İzleme**, **KDDP**, **KDDP İzleme**. Arayüzden yeni tür tanımlanabilir
+**UKAP — İzleme**, **KDDP**, **KDDP — İzleme**. Arayüzden yeni tür tanımlanabilir
 (geleceğe dönük); yeni türler taban şablonla başlar ve düzenlenebilir.
-Ara değerlendirme ve izleme türleri (KAP — Ara Değerlendirme, UKAP İzleme,
-KDDP İzleme) küçültülmüş takım şablonuyla gelir: 2 akademik üye, öğrenci
-zorunluluğu ve ilk kez görev şartı kapalı; UKAP İzleme'de ayrıca asgari dil
+Ara değerlendirme ve izleme türleri (KAP — Ara Değerlendirme, UKAP — İzleme,
+KDDP — İzleme) küçültülmüş takım şablonuyla gelir: 2 akademik üye, öğrenci
+zorunluluğu ve ilk kez görev şartı kapalı; UKAP — İzleme'de ayrıca asgari dil
 puanı 80'dir.
 
 Şablon alanları ve Usul-Esaslar dayanakları:

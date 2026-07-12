@@ -57,6 +57,9 @@ check("şablon: Ara Değerlendirme küçük takım", Teams.defaultTemplate("ara"
 check("tür: Ara Değerlendirme etiketi KAP çatısında",
   Teams.DEFAULT_TYPES.find(t => t.id === "ara").ad === "KAP — Ara Değerlendirme");
 check("şablon: KDDP İzleme türü tanımlı", Teams.DEFAULT_TYPES.some(t => t.id === "kddp-izleme"));
+check("tür: izleme etiketleri çizgili biçimde",
+  Teams.DEFAULT_TYPES.find(t => t.id === "ukap-izleme").ad === "UKAP — İzleme" &&
+  Teams.DEFAULT_TYPES.find(t => t.id === "kddp-izleme").ad === "KDDP — İzleme");
 const kddpIzleme = Teams.defaultTemplate("kddp-izleme");
 check("şablon: KDDP İzleme izleme yapısında, dil şartı yok",
   kddpIzleme.akademikSayisi === 2 && kddpIzleme.ogrenciZorunlu === false &&
