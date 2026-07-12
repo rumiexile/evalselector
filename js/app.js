@@ -413,11 +413,14 @@
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") $("modal").hidden = true; });
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
+  function init() {
     state.criteria = loadCriteria();
     renderCriteria();
     bindCriteriaControls();
     bindUpload();
     bindResults();
-  });
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
 })();
