@@ -98,6 +98,7 @@
 
   function renderSablon() {
     var s = template();
+    $("t-sablon-tur").textContent = turAdi(T.aktifTur) + " ";
     $("s-akademik").value = s.akademikSayisi;
     $("s-idari").checked = s.idariZorunlu;
     $("s-ogrenci").checked = s.ogrenciZorunlu;
