@@ -2,12 +2,27 @@
  * universities.js — Türkiye'deki yükseköğretim kurumları listesi.
  * Liste kod içinde gömülüdür (uygulama çevrimdışı çalışır); güncel YÖK
  * listesiyle küçük farklar olabilir — arayüzden elle kurum eklenebilir.
- * Alanlar: ad, il, tur ("Devlet" | "Vakıf")
+ * Alanlar: ad, il (şehir), tur ("Devlet" | "Vakıf"), ulke (boş = Türkiye)
  */
 (function (root) {
   "use strict";
 
   function U(ad, il, tur) { return { ad: ad, il: il, tur: tur }; }
+
+  // Elle kurum eklemede kullanılan ülke listesi (Türkiye ilk sırada)
+  var COUNTRIES = ["Türkiye",
+    "ABD", "Almanya", "Arnavutluk", "Avustralya", "Avusturya", "Azerbaycan",
+    "Bahreyn", "Belçika", "Birleşik Arap Emirlikleri", "Birleşik Krallık",
+    "Bosna-Hersek", "Bulgaristan", "Çekya", "Çin", "Danimarka", "Endonezya",
+    "Estonya", "Fas", "Filistin", "Finlandiya", "Fransa", "Güney Kore",
+    "Gürcistan", "Hindistan", "Hollanda", "Irak", "İran", "İrlanda",
+    "İspanya", "İsveç", "İsviçre", "İtalya", "Japonya", "Kanada", "Katar",
+    "Kazakistan", "Kırgızistan", "KKTC", "Kosova", "Kuveyt", "Letonya",
+    "Litvanya", "Lübnan", "Macaristan", "Makedonya", "Malezya", "Mısır",
+    "Moğolistan", "Moldova", "Karadağ", "Norveç", "Özbekistan", "Pakistan",
+    "Polonya", "Portekiz", "Romanya", "Rusya", "Sırbistan", "Singapur",
+    "Slovakya", "Slovenya", "Suudi Arabistan", "Tacikistan", "Tunus",
+    "Türkmenistan", "Ukrayna", "Ürdün", "Yunanistan", "Diğer"];
 
   var UNIVERSITIES = [
     // ---- Devlet üniversiteleri ----
@@ -215,7 +230,7 @@
     U("Yüksek İhtisas Üniversitesi", "Ankara", "Vakıf")
   ];
 
-  var api = { UNIVERSITIES: UNIVERSITIES };
+  var api = { UNIVERSITIES: UNIVERSITIES, COUNTRIES: COUNTRIES };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.Universities = api;
 })(typeof self !== "undefined" ? self : this);

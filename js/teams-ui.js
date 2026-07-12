@@ -166,6 +166,23 @@
     return tumKurumlar().find(function (k) { return TextParse.norm(k.ad) === n; }) || null;
   }
 
+  // Şehir (+ Türkiye dışıysa ülke) gösterimi
+  function yerBilgisi(k) {
+    var ulke = k.ulke && k.ulke !== "Türkiye" ? " · " + k.ulke : "";
+    return k.il + ulke;
+  }
+
+  function renderUlkeSecenekleri() {
+    var sel = $("k-yeni-ulke");
+    sel.innerHTML = "";
+    Universities.COUNTRIES.forEach(function (ulke) {
+      var o = document.createElement("option");
+      o.value = ulke; o.textContent = ulke;
+      sel.appendChild(o);
+    });
+    sel.value = "Türkiye";
+  }
+
   function renderKurumlar() {
     var arama = TextParse.norm($("k-arama").value);
     var turF = $("k-tur-filtre").value;
@@ -191,7 +208,7 @@
         lbl.appendChild(document.createTextNode(" " + k.ad));
         var span = document.createElement("span");
         span.className = "hint";
-        span.textContent = " — " + k.il + " · " + k.tur;
+        span.textContent = " — " + yerBilgisi(k) + " · " + k.tur;
         lbl.appendChild(span);
         div.appendChild(lbl);
       });
@@ -233,8 +250,12 @@
       var ad = $("k-yeni-ad").value.trim();
       if (!ad) { bildir("Kurum adı boş olamaz.", "err"); return; }
       if (kurumBilgi(ad)) { bildir("Bu kurum zaten listede.", "err"); return; }
-      T.ekKurumlar.push({ ad: ad, il: $("k-yeni-il").value.trim() || "—", tur: $("k-yeni-tur").value });
-      $("k-yeni-ad").value = ""; $("k-yeni-il").value = "";
+      T.ekKurumlar.push({
+        ad: ad, il: $("k-yeni-sehir").value.trim() || "—",
+        tur: $("k-yeni-tur").value, ulke: $("k-yeni-ulke").value
+      });
+      $("k-yeni-ad").value = ""; $("k-yeni-sehir").value = "";
+      $("k-yeni-ulke").value = "Türkiye";
       kurumSecim(ad, true);
       renderCoiKurumListesi();
       bildir("\"" + ad + "\" listeye eklendi ve seçildi.", "ok");
@@ -316,7 +337,7 @@
       var card = document.createElement("div");
       card.className = "team-card";
       var head = '<div class="team-head"><div><strong>' + esc(kurum) + "</strong>" +
-        (kb ? ' <span class="hint">' + esc(kb.il) + " · " + esc(kb.tur) + "</span>" : "") +
+        (kb ? ' <span class="hint">' + esc(yerBilgisi(kb)) + " · " + esc(kb.tur) + "</span>" : "") +
         (takim ? ' <span class="hint">— ' + esc(turAdi(takim.turId)) +
           (takim.donem ? " · " + esc(takim.donem) : "") + "</span>" : "") +
         "</div><div class='team-actions'>";
@@ -709,6 +730,7 @@
     bindTakimlar();
     bindCoi();
     renderTur();
+    renderUlkeSecenekleri();
     renderKurumlar();
     renderCoiKurumListesi();
     renderTakimlar();

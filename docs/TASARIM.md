@@ -202,10 +202,12 @@ puanı 80'dir.
 
 ### 9.2 Kurum seçimi
 
-Türkiye'deki üniversiteler (devlet + vakıf, il ve tür bilgisiyle) uygulama
+Türkiye'deki üniversiteler (devlet + vakıf, şehir ve tür bilgisiyle) uygulama
 içinde gömülüdür; arama ve tür filtresiyle seçilir. Listede olmayan kurumlar
-elle eklenebilir (ad, il, tür) ve eklenenler tarayıcıda saklanır. Bir kurum
-seçimden çıkarılırsa kurulmuş takımı da kaldırılır.
+elle eklenebilir — ad, şehir, ülke (öntanımlı Türkiye; UKAP gibi yurt dışı
+değerlendirmeler için ülke listesinden seçilir) ve tür. Eklenenler tarayıcıda
+saklanır; Türkiye dışındaki kurumlarda ülke adı listede ve takım kartında
+gösterilir. Bir kurum seçimden çıkarılırsa kurulmuş takımı da kaldırılır.
 
 ### 9.3 Takım kurulumu ve değiştirme
 
