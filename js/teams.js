@@ -19,7 +19,7 @@
   // ---- Değerlendirme türleri --------------------------------------------
   var DEFAULT_TYPES = [
     { id: "kap",         ad: "KAP — Kurumsal Akreditasyon Programı" },
-    { id: "ara",         ad: "Ara Değerlendirme" },
+    { id: "ara",         ad: "KAP — Ara Değerlendirme" },
     { id: "ukap",        ad: "UKAP — Uluslararası Kurumsal Akreditasyon Programı" },
     { id: "ukap-izleme", ad: "UKAP İzleme" },
     { id: "kddp",        ad: "KDDP — Kurumsal Dış Değerlendirme Programı" },

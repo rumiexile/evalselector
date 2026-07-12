@@ -5,8 +5,8 @@
 1. **Değerlendirici Seçimi** — başvuru Excel dosyasını kriter setine göre
    analiz eder, eğitime davet edilecek adayları önerir, uygun olmayan ya da
    eksik veriye sahip başvuruları raporlar.
-2. **Takım Oluşturma** — değerlendirme türüne (KAP, Ara Değerlendirme, UKAP,
-   UKAP İzleme, KDDP, KDDP İzleme + kullanıcı tanımlı türler) göre şablon tabanlı
+2. **Takım Oluşturma** — değerlendirme türüne (KAP, KAP — Ara Değerlendirme,
+   UKAP, UKAP İzleme, KDDP, KDDP İzleme + kullanıcı tanımlı türler) göre şablon tabanlı
    değerlendirme takımlarını **rastlantısal yöntemle** kurar; yedekleri,
    çıkar çatışması kontrolünü ve üye değiştirmeyi destekler.
 
