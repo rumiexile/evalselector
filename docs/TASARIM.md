@@ -178,16 +178,19 @@ Havuz olarak 1. modülde yüklenen başvuru dosyası kullanılır; `Tip` sütunu
 ### 9.1 Değerlendirme türleri ve şablonlar
 
 Öntanımlı türler: **KAP**, **Ara Değerlendirme**, **UKAP**, **UKAP İzleme**,
-**KDDP**. Arayüzden yeni tür tanımlanabilir (geleceğe dönük); yeni türler
-taban şablonla başlar ve düzenlenebilir.
+**KDDP**, **KDDP İzleme**. Arayüzden yeni tür tanımlanabilir (geleceğe
+dönük); yeni türler taban şablonla başlar ve düzenlenebilir. İzleme türleri
+(UKAP İzleme, KDDP İzleme) küçültülmüş takım şablonuyla gelir: 2 akademik
+üye, öğrenci zorunluluğu ve ilk kez görev şartı kapalı; UKAP İzleme'de ayrıca
+asgari dil puanı 80'dir.
 
 Şablon alanları ve Usul-Esaslar dayanakları:
 
 | Alan | Öntanımlı | Dayanak |
 |---|---|---|
-| Akademik üye sayısı (başkan hariç) | 3 (Ara/UKAP İzleme: 2) | Kurum büyüklüğüne göre takım (8/1-7) |
+| Akademik üye sayısı (başkan hariç) | 3 (Ara ve izleme türleri: 2) | Kurum büyüklüğüne göre takım (8/1-7) |
 | İdari değerlendirici bulunsun | Evet | Takımlarda akademik, idari, öğrenci zorunlu (8/3) |
-| Öğrenci değerlendirici bulunsun | Evet (Ara/UKAP İzleme: Hayır) | 8/3 |
+| Öğrenci değerlendirici bulunsun | Evet (Ara ve izleme türleri: Hayır) | 8/3 |
 | Başkan asgari görev sayısı (TkBsk+AkdGor+IdrGor) | 3 | En az 3 kez dış değerlendirici (8/9) |
 | Asgari dil puanı (başkan + akademik) | 0; UKAP türlerinde 80 | Kullanıcı gereksinimi (UKAP dil düzeyi) |
 | İlk kez görev alacak üye: en az / en fazla | 1 / 2 | 8/8 (öğrenciler sayım dışı tutulur) |

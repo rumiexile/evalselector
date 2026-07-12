@@ -54,6 +54,11 @@ check("şablon: KAP öğrenci zorunlu", kap.ogrenciZorunlu === true && kap.idari
 check("şablon: KAP başkan görev kriteri", kap.bskMinGorev === 3);
 check("şablon: UKAP dil şartı", Teams.defaultTemplate("ukap").minDilPuani === 80);
 check("şablon: Ara Değerlendirme küçük takım", Teams.defaultTemplate("ara").akademikSayisi === 2);
+check("şablon: KDDP İzleme türü tanımlı", Teams.DEFAULT_TYPES.some(t => t.id === "kddp-izleme"));
+const kddpIzleme = Teams.defaultTemplate("kddp-izleme");
+check("şablon: KDDP İzleme izleme yapısında, dil şartı yok",
+  kddpIzleme.akademikSayisi === 2 && kddpIzleme.ogrenciZorunlu === false &&
+  kddpIzleme.minYeni === 0 && kddpIzleme.minDilPuani === 0);
 check("şablon: bilinmeyen tür taban değerlerle", Teams.defaultTemplate("yeni-tur").akademikSayisi === 3);
 check("takım büyüklüğü", Teams.takimBuyuklugu(kap) === 6);
 

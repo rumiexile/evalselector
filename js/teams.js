@@ -22,7 +22,8 @@
     { id: "ara",         ad: "Ara Değerlendirme" },
     { id: "ukap",        ad: "UKAP — Uluslararası Kurumsal Akreditasyon Programı" },
     { id: "ukap-izleme", ad: "UKAP İzleme" },
-    { id: "kddp",        ad: "KDDP — Kurumsal Dış Değerlendirme Programı" }
+    { id: "kddp",        ad: "KDDP — Kurumsal Dış Değerlendirme Programı" },
+    { id: "kddp-izleme", ad: "KDDP İzleme" }
   ];
 
   // Tür bazında öntanımlı şablonlar; tanımsız türler BASE ile başlar.
@@ -43,7 +44,8 @@
     "ara":         { akademikSayisi: 2, ogrenciZorunlu: false, minYeni: 0 },
     "ukap":        { minDilPuani: 80 },
     "ukap-izleme": { akademikSayisi: 2, ogrenciZorunlu: false, minYeni: 0, minDilPuani: 80 },
-    "kddp":        {}
+    "kddp":        {},
+    "kddp-izleme": { akademikSayisi: 2, ogrenciZorunlu: false, minYeni: 0 }
   };
 
   function defaultTemplate(turId) {
