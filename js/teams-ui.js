@@ -608,9 +608,17 @@
         }
         if (b.dataset.act === "oto" || b.dataset.act === "yeniden") {
           if (!pool().length) { bildir("Havuz boş; önce başvuru dosyası yükleyiniz.", "err"); return; }
-          var uy = autoBuild(kurum);
-          renderTakimlar();
-          bildir(uy.length ? kurum + ": takım kuruldu; " + uy.length + " uyarı var." : kurum + ": takım kuruldu.", uy.length ? "" : "ok");
+          var kur = function () {
+            var uy = autoBuild(kurum);
+            renderTakimlar();
+            bildir(uy.length ? kurum + ": takım kuruldu; " + uy.length + " uyarı var." : kurum + ": takım kuruldu.", uy.length ? "" : "ok");
+          };
+          if (b.dataset.act === "yeniden") {
+            onay("\"" + kurum + "\" takımı yeniden kurulacak; mevcut asil kadro silinip rastlantısal olarak yeniden atanacak. Onaylıyor musunuz?",
+              { tehlike: true, onayEtiket: "Yeniden kur" }).then(function (evet) { if (evet) kur(); });
+          } else {
+            kur();
+          }
         } else if (b.dataset.act === "bos") {
           T.takimlar[kurum] = Teams.bosTakim(kurum, T.aktifTur, T.donem, template());
           renderTakimlar();
