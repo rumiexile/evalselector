@@ -271,6 +271,13 @@
     renderSummary();
     renderTable();
     $("results-section").hidden = false;
+    renderAnalytics();
+  }
+
+  function renderAnalytics() {
+    if (!window.Charts || !state.rows) return;
+    $("analytics-body").innerHTML = Charts.renderDashboard(state.rows);
+    $("analytics-section").hidden = false;
   }
 
   function renderSummary() {

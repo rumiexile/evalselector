@@ -146,6 +146,14 @@ görünür — sistem sessizce 0 verip geçmez.
    ve ham veri görüntülenir.
 4. **Rapor**: tek tıkla Excel raporu — sayfalar: Özet (parametreler dâhil),
    Davet Önerilenler, Sınırda, Uygun Olmayanlar, Eksik Veri, Tüm Sonuçlar.
+5. **Havuz analitiği** (`js/charts.js`): sonuç tablosunun altında, tüm havuza
+   ait (filtrelerden bağımsız) dağılım grafikleri — özet istatistik tümceleri,
+   temel alan / akademik unvan / üniversite dağılımları (yatay çubuk),
+   değerlendirme tecrübesi (histogram), E/Y oranı, tip ve cinsiyet dengesi
+   (halka). Grafikler bağımlılıksız HTML/CSS ile çizilir; YÖKAK mavi paleti
+   kullanılır ve her değer doğrudan etiketlenir. **Cinsiyet** dosyada bir alan
+   olmadığından yalnızca **ada göre tahminidir** (tanınmayan adlar "Belirsiz");
+   resmî gösterge değildir.
 
 ## 7. Test ve Doğrulama
 
