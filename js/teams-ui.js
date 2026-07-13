@@ -299,11 +299,14 @@
       (T.donem ? "" : '<p class="warn">Dönem adı tanımlanmadı; raporlarda boş görünecektir.</p>');
   }
 
-  function uyeChip(tc, rol, kurum, yedekMi) {
+  function uyeChip(tc, rol, kurum, yedekMi, tiklanabilir) {
     var idx = poolIndex();
     var row = idx[tc];
     var s = template();
-    var html = '<div class="uye' + (yedekMi ? " uye-yedek" : "") + '">';
+    // Takım kartındaki, havuz verisi olan üyeler tıklanınca profil açılır (data-uye-tc)
+    var acilir = row && tiklanabilir;
+    var tikla = acilir ? ' data-uye-tc="' + esc(tc) + '" title="Profili gör" role="button" tabindex="0"' : "";
+    var html = '<div class="uye' + (yedekMi ? " uye-yedek" : "") + (acilir ? " uye-tikla" : "") + '"' + tikla + ">";
     if (!row) {
       html += '<span class="uye-ad warn">TcNo ' + esc(maskTc(tc)) + '</span>' +
               '<span class="uye-alt warn">Havuz verisinde bulunamadı</span>';
@@ -323,6 +326,72 @@
     }
     html += "</div>";
     return html;
+  }
+
+  // Takıma yerleştirilmiş bir üyenin profilini #modal içinde gösterir.
+  function showUyeProfil(tc) {
+    var row = poolIndex()[tc];
+    if (!row) { bildir("Bu kişinin havuz verisi bulunamadı.", "err"); return; }
+    var tip = Teams.tipOf(row);
+    var tipEt = { akademik: "Akademik", idari: "İdari", ogrenci: "Öğrenci", diger: row["Tip"] || "—" }[tip];
+
+    var rozet = [];
+    if (Teams.isYeni(row)) rozet.push('<span class="rozet r-yeni">İlk kez görev</span>');
+    var dilObj = TextParse.parseYabanciDil(row["YabanciDil"]);
+    if (dilObj && dilObj.puan !== null) rozet.push('<span class="rozet r-dil">Dil ' + dilObj.puan + "</span>");
+
+    var html = "<h3>" + esc((row["Ad"] || "") + " " + (row["Soyad"] || "")) + "</h3>" +
+      '<p class="hint">' + esc(row["Universite"] || "") + " · " + esc(tipEt) +
+      (row["AkademikUnvan"] ? " · " + esc(row["AkademikUnvan"]) : "") + "</p>" +
+      (rozet.length ? "<p>" + rozet.join(" ") + "</p>" : "");
+
+    // Hangi takım(lar)da, hangi rolde görevli
+    var gorevler = [];
+    Object.keys(T.takimlar).forEach(function (kurum) {
+      var tk = T.takimlar[kurum];
+      ["baskan", "akademik", "idari", "ogrenci"].forEach(function (rl) {
+        var asil = rl === "akademik" ? tk.asil.akademik : (tk.asil[rl] ? [tk.asil[rl]] : []);
+        if (asil.indexOf(tc) !== -1) gorevler.push(esc(kurum) + " — " + Teams.ROL_LABELS[rl] + " (asil)");
+        if ((tk.yedek[rl] || []).indexOf(tc) !== -1) gorevler.push(esc(kurum) + " — " + Teams.ROL_LABELS[rl] + " (yedek)");
+      });
+    });
+    if (gorevler.length) {
+      html += "<h4>Dönemdeki Görevi</h4><ul>" +
+        gorevler.map(function (g) { return "<li>" + g + "</li>"; }).join("") + "</ul>";
+    }
+
+    // Değerlendirici özeti
+    var tk = TextParse.parseSayi(row["TkBsk"]), ak = TextParse.parseSayi(row["AkdGor"]), ii = TextParse.parseSayi(row["IdrGor"]);
+    var dilTxt = "—";
+    if (dilObj && dilObj.puan !== null) dilTxt = dilObj.sinav + " " + dilObj.ham + " (100'lük: " + dilObj.puan + ")";
+    else if (dilObj && dilObj.puan === null) dilTxt = "Çözümlenemedi";
+    var ozet = [
+      ["Tip", tipEt],
+      ["Temel Alan", row["Temel Alan"] || "—"],
+      ["Bilim Alanı", row["Bilim Alan"] || "—"],
+      ["Takım başkanlığı (TkBsk)", tk === null ? "—" : tk],
+      ["Akademik değerlendirme (AkdGor)", ak === null ? "—" : ak],
+      ["İdari değerlendirme (IdrGor)", ii === null ? "—" : ii],
+      ["Toplam görev", Teams.gorevSayisi(row)],
+      ["İlk kez görev alacak", Teams.isYeni(row) ? "Evet" : "Hayır"],
+      ["Yabancı dil", dilTxt],
+      ["Havuz durumu", TextParse.norm(row["Secim"]) === "e" ? "Mevcut havuz (E)" : (TextParse.norm(row["Secim"]) === "y" ? "Yeni başvuru (Y)" : "—")]
+    ];
+    html += "<h4>Değerlendirici Özeti</h4><table class='detay-tablo'><tbody>" +
+      ozet.map(function (p) { return "<tr><th>" + esc(p[0]) + "</th><td>" + esc(p[1]) + "</td></tr>"; }).join("") +
+      "</tbody></table>";
+
+    // Ham veri
+    html += "<h4>Ham Veri</h4><table class='detay-tablo'><tbody>";
+    Engine.COLUMNS.forEach(function (col) {
+      var v = row[col.ad];
+      if (col.ad === "TcNo") v = maskTc(v);
+      html += "<tr><th>" + esc(col.ad) + "</th><td>" + esc(v === null || v === undefined ? "—" : v) + "</td></tr>";
+    });
+    html += "</tbody></table>";
+
+    $("modal-body").innerHTML = html;
+    $("modal").hidden = false;
   }
 
   function renderTakimlar() {
@@ -371,7 +440,7 @@
           var yedekler = takim.yedek[rol] || [];
           return '<tr class="yedek-satir"><th class="hint">' + esc(Teams.ROL_LABELS[rol]) + ' yedeği</th><td>' +
             (yedekler.length ? yedekler.map(function (ytc) {
-              return '<div class="yedek-item">' + uyeChip(ytc, rol, kurum, true) +
+              return '<div class="yedek-item">' + uyeChip(ytc, rol, kurum, true, true) +
                 '<span class="yedek-btns">' +
                 '<button type="button" class="btn-mini" data-yasil-rol="' + rol + '" data-yasil-tc="' + esc(ytc) + '">Asil yap</button>' +
                 '<button type="button" class="btn-mini" data-ysil-rol="' + rol + '" data-ysil-tc="' + esc(ytc) + '">Çıkar</button>' +
@@ -384,7 +453,7 @@
         satirlar.forEach(function (sat) {
           var rol = sat[0], etiket = sat[1], tc = sat[2], ai = sat[3];
           tbl += '<tr><th>' + esc(etiket) + "</th><td>" +
-            (tc ? uyeChip(tc, rol, kurum, false) : '<span class="hint">— boş —</span>') +
+            (tc ? uyeChip(tc, rol, kurum, false, true) : '<span class="hint">— boş —</span>') +
             '</td><td class="slot-btn"><button type="button" class="btn-mini" data-slot-rol="' + rol +
             '" data-slot-ai="' + ai + '">' + (tc ? "Değiştir" : "Seç") + "</button></td></tr>";
         });
@@ -409,7 +478,12 @@
       // Olay bağlama
       card.addEventListener("click", function (e) {
         var b = e.target.closest("button");
-        if (!b) return;
+        if (!b) {
+          // Düğme dışında bir üyeye tıklanırsa profilini göster
+          var u = e.target.closest(".uye[data-uye-tc]");
+          if (u) showUyeProfil(u.getAttribute("data-uye-tc"));
+          return;
+        }
         if (b.dataset.act === "oto" || b.dataset.act === "yeniden") {
           if (!pool().length) { bildir("Havuz boş; önce başvuru dosyası yükleyiniz.", "err"); return; }
           var uy = autoBuild(kurum);
@@ -434,6 +508,13 @@
           tk.yedek[b.dataset.ysilRol] = tk.yedek[b.dataset.ysilRol].filter(function (x) { return x !== b.dataset.ysilTc; });
           renderTakimlar();
         }
+      });
+
+      // Klavye erişilebilirliği: üye üzerinde Enter/Space profil açar
+      card.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        var u = e.target.closest(".uye[data-uye-tc]");
+        if (u) { e.preventDefault(); showUyeProfil(u.getAttribute("data-uye-tc")); }
       });
 
       div.appendChild(card);
