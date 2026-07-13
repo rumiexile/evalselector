@@ -465,8 +465,11 @@
   function renderHavuz() {
     var div = $("yedek-havuzu");
     if (!div) return;
-    if (!Object.keys(T.takimlar).length) { div.innerHTML = ""; return; }
     var turId = T.aktifTur, t = template(), hav = havuzOf(turId);
+    var havDolu = ROLLER.some(function (rol) { return (hav[rol] || []).length; });
+    // İlk takımdan önce gizli; ancak havuz doluysa (örn. takım silinip üyeler
+    // yedeğe gönderilince) takım kalmasa da gösterilir.
+    if (!Object.keys(T.takimlar).length && !havDolu) { div.innerHTML = ""; return; }
     var roller = ["baskan", "akademik"];
     if (t.idariZorunlu) roller.push("idari");
     if (t.ogrenciZorunlu) roller.push("ogrenci");
@@ -645,11 +648,32 @@
           T.takimlar[kurum] = Teams.bosTakim(kurum, T.aktifTur, T.donem, template());
           renderTakimlar();
         } else if (b.dataset.act === "sil") {
-          onay("\"" + kurum + "\" takımı silinecek. Onaylıyor musunuz?", { tehlike: true, onayEtiket: "Sil" })
-            .then(function (evet) {
-              if (!evet) return;
-              delete T.takimlar[kurum];
-              renderTakimlar();
+          var tkSil = T.takimlar[kurum];
+          var uyeSayisi = tkSil ? Teams.asilTcleri(tkSil).size : 0;
+          var silOpts = { tehlike: true, onayEtiket: "Sil" };
+          if (uyeSayisi > 0) { silOpts.ekstraEtiket = "Üyeleri yedeklere gönder"; silOpts.ekstraDeger = "yedek"; }
+          onay("\"" + kurum + "\" takımı silinecek." +
+            (uyeSayisi > 0 ? " " + uyeSayisi + " üyeyi yedek havuzuna gönderebilir ya da tamamen kaldırabilirsiniz." : " Onaylıyor musunuz?"),
+            silOpts).then(function (sonuc) {
+              if (!sonuc) return;
+              if (sonuc === "yedek" && tkSil) {
+                var hav = havuzOf(tkSil.turId), eklendi = 0;
+                [["baskan", tkSil.asil.baskan ? [tkSil.asil.baskan] : []],
+                 ["akademik", tkSil.asil.akademik],
+                 ["idari", tkSil.asil.idari ? [tkSil.asil.idari] : []],
+                 ["ogrenci", tkSil.asil.ogrenci ? [tkSil.asil.ogrenci] : []]].forEach(function (pair) {
+                  pair[1].forEach(function (tc) {
+                    if (tc && hav[pair[0]].indexOf(tc) === -1) { hav[pair[0]].push(tc); eklendi++; }
+                  });
+                });
+                delete T.takimlar[kurum];
+                renderTakimlar();
+                bildir("\"" + kurum + "\" takımı silindi; " + eklendi + " üye yedek havuzuna gönderildi.", "ok");
+              } else {
+                delete T.takimlar[kurum];
+                renderTakimlar();
+                bildir("\"" + kurum + "\" takımı silindi.", "");
+              }
             });
         } else if (b.dataset.slotRol) {
           openPicker({ mod: "asil", kurum: kurum, rol: b.dataset.slotRol, akademikIdx: parseInt(b.dataset.slotAi, 10) });
