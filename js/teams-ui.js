@@ -816,28 +816,38 @@
       : "Üye atandı.", "ok");
   }
 
-  // Bir koltuktaki üyeyi (onay alarak) kaldırır; koltuk boş kalır. Kaldırılan
-  // kişi serbest bırakılır (havuza taşınmaz). Boş koltuk, alttaki kontrol
-  // ekranında şablona göre eksiklik olarak bildirilir.
+  // Bir koltuktaki üyeyi (onay alarak) kaldırır; koltuk boş kalır. Onay
+  // penceresinde iki seçenek sunulur:
+  //   "Kaldır"            → kişi serbest bırakılır (havuza taşınmaz)
+  //   "Yedeklere gönder"  → kişi bu türün aynı rol yedek havuzuna alınır
+  // Boş koltuk, alttaki kontrol ekranında şablona göre eksiklik olarak bildirilir.
   function kaldirUye(kurum, rol, akademikIdx) {
-    var tk = T.takimlar[kurum];
+    var tk = T.takimlar[kurum], turId = tk.turId;
     var tc = rol === "akademik" ? tk.asil.akademik[akademikIdx] : tk.asil[rol];
     if (!tc) return;
     var row = poolIndex()[tc];
     var ad = row ? ((row["Ad"] || "") + " " + (row["Soyad"] || "")).trim() : "TcNo " + maskTc(tc);
-    onay("\"" + ad + "\" " + Teams.ROL_LABELS[rol] + " koltuğundan kaldırılacak ve koltuk boş kalacak. Onaylıyor musunuz?",
-      { tehlike: true, onayEtiket: "Kaldır" }).then(function (evet) {
-      if (!evet) return;
-      // Kaldırma anında dizideki konum değişmiş olabilir; tc'yi yeniden ara
-      if (rol === "akademik") {
-        var i = tk.asil.akademik.indexOf(tc);
-        if (i !== -1) tk.asil.akademik.splice(i, 1);
-      } else if (tk.asil[rol] === tc) {
-        tk.asil[rol] = null;
-      }
-      renderTakimlar();
-      bildir("Üye kaldırıldı; koltuk boş bırakıldı. Eksiklik, takım kontrol panelinde bildirilir.", "");
-    });
+    onay("\"" + ad + "\" " + Teams.ROL_LABELS[rol] + " koltuğundan kaldırılacak ve koltuk boş kalacak. " +
+      "Kişiyi tamamen kaldırabilir ya da bu türün yedek havuzuna gönderebilirsiniz.",
+      { tehlike: true, onayEtiket: "Kaldır", ekstraEtiket: "Yedeklere gönder", ekstraDeger: "yedek" })
+      .then(function (sonuc) {
+        if (!sonuc) return; // Vazgeç
+        // Koltuğu boşalt (konum değişmiş olabilir; tc'yi yeniden ara)
+        if (rol === "akademik") {
+          var i = tk.asil.akademik.indexOf(tc);
+          if (i !== -1) tk.asil.akademik.splice(i, 1);
+        } else if (tk.asil[rol] === tc) {
+          tk.asil[rol] = null;
+        }
+        if (sonuc === "yedek") {
+          var hav = havuzOf(turId);
+          if (hav[rol].indexOf(tc) === -1) hav[rol].push(tc);
+          bildir("Üye koltuktan alınıp " + Teams.ROL_LABELS[rol] + " yedek havuzuna gönderildi.", "ok");
+        } else {
+          bildir("Üye kaldırıldı; koltuk boş bırakıldı. Eksiklik, takım kontrol panelinde bildirilir.", "");
+        }
+        renderTakimlar();
+      });
   }
 
   // ---------------- ÇÇ beyanları ----------------

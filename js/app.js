@@ -19,7 +19,8 @@
   function $(id) { return document.getElementById(id); }
 
   // Uygulama-içi onay penceresi. window.confirm sandbox iframe'lerde (Artifact)
-  // engellendiğinden native confirm yerine bu kullanılır. Promise<boolean> döner.
+  // engellendiğinden native confirm yerine bu kullanılır.
+  // Dönüş: false (vazgeç) | true (onay) | opts.ekstraDeger (varsa üçüncü buton).
   function uiConfirm(mesaj, opts) {
     opts = opts || {};
     return new Promise(function (resolve) {
@@ -31,28 +32,34 @@
         ov.innerHTML = '<div class="modal-box confirm-box" role="alertdialog" aria-modal="true">' +
           '<p id="confirm-msg"></p><div class="confirm-actions">' +
           '<button type="button" id="confirm-cancel" class="btn btn-ghost"></button>' +
+          '<button type="button" id="confirm-extra" class="btn btn-ghost"></button>' +
           '<button type="button" id="confirm-ok" class="btn"></button></div></div>';
         document.body.appendChild(ov);
       }
       var msg = ov.querySelector("#confirm-msg");
       var ok = ov.querySelector("#confirm-ok");
       var cancel = ov.querySelector("#confirm-cancel");
+      var extra = ov.querySelector("#confirm-extra");
       msg.textContent = mesaj;
       ok.textContent = opts.onayEtiket || "Onayla";
       cancel.textContent = opts.vazgecEtiket || "Vazgeç";
       ok.className = "btn " + (opts.tehlike ? "btn-danger" : "btn-primary");
+      if (opts.ekstraEtiket) { extra.textContent = opts.ekstraEtiket; extra.hidden = false; }
+      else { extra.hidden = true; }
       ov.hidden = false;
       ok.focus();
       function kapat(sonuc) {
         ov.hidden = true;
         ok.removeEventListener("click", onOk);
         cancel.removeEventListener("click", onCancel);
+        extra.removeEventListener("click", onExtra);
         ov.removeEventListener("click", onBackdrop);
         document.removeEventListener("keydown", onKey, true);
         resolve(sonuc);
       }
       function onOk() { kapat(true); }
       function onCancel() { kapat(false); }
+      function onExtra() { kapat(opts.ekstraDeger !== undefined ? opts.ekstraDeger : "extra"); }
       function onBackdrop(e) { if (e.target === ov) kapat(false); }
       function onKey(e) {
         if (e.key === "Escape") { e.preventDefault(); kapat(false); }
@@ -60,6 +67,7 @@
       }
       ok.addEventListener("click", onOk);
       cancel.addEventListener("click", onCancel);
+      extra.addEventListener("click", onExtra);
       ov.addEventListener("click", onBackdrop);
       document.addEventListener("keydown", onKey, true);
     });
