@@ -245,6 +245,45 @@
     });
 
     $("btn-sample").addEventListener("click", loadSampleData);
+    $("btn-template").addEventListener("click", downloadTemplate);
+  }
+
+  // Boş (yalnızca başlık satırlı) başvuru şablonu + sütun açıklamaları indirir.
+  function downloadTemplate() {
+    var headers = Engine.COLUMNS.map(function (c) { return c.ad; });
+    var wb = XLSX.utils.book_new();
+
+    // 1) Boş şablon sayfası — sadece başlık satırı
+    var ws = XLSX.utils.aoa_to_sheet([headers]);
+    ws["!cols"] = headers.map(function (h) { return { wch: Math.max(10, h.length + 2) }; });
+    XLSX.utils.book_append_sheet(wb, ws, "Başvurular");
+
+    // 2) Açıklama sayfası — her sütunun anlamı ve örnek değeri
+    var aciklamalar = [
+      ["TcNo", "T.C. Kimlik No — her başvuru için benzersiz kimlik (zorunlu)", "12345678901"],
+      ["Universite", "Çalıştığı / bağlı olduğu kurum (zorunlu)", "Ankara Üniversitesi"],
+      ["Tip", "Değerlendirici tipi: Akademik / İdari / Öğrenci (zorunlu)", "Akademik"],
+      ["Akademik Görev", "Akademik idari görev (Rektör Yrd., Dekan, Bölüm Başkanı vb.)", "Dekan"],
+      ["AkademikUnvan", "Prof. Dr. / Doç. Dr. / Dr. Öğr. Üyesi / Öğr. Gör. / Arş. Gör.", "Prof. Dr."],
+      ["IdariGorev", "İdari personel için görev unvanı", "Daire Başkanı"],
+      ["Ad", "Ad (zorunlu)", "Ayşe"],
+      ["Soyad", "Soyad (zorunlu)", "Yılmaz"],
+      ["Temel Alan", "YÖKAK temel alanı", "Fen Bilimleri ve Matematik"],
+      ["Bilim Alan", "Bilim/alt alan", "Kimya"],
+      ["TkBsk", "Takım başkanlığı sayısı (sayı)", "3"],
+      ["AkdGor", "Akademik değerlendirici görev sayısı (sayı)", "5"],
+      ["IdrGor", "İdari değerlendirici görev sayısı (sayı)", "1"],
+      ["Tecrube", "Kalite güvencesi deneyimi (serbest metin)", "YÖKAK dış değerlendirme, kurumsal akreditasyon"],
+      ["YabanciDil", "Yabancı dil sınavı ve puanı", "YDS 85"],
+      ["Ogrenim", "Öğrenim bilgisi: lisans / yüksek lisans / doktora yılı", "Lisans 1990, Doktora 1998"],
+      ["Secim", "Başvuru durumu: E = mevcut havuz, Y = yeni başvuru", "E"]
+    ].map(function (r) { return { "Sütun": r[0], "Açıklama": r[1], "Örnek Değer": r[2] }; });
+    var ws2 = XLSX.utils.json_to_sheet(aciklamalar, { header: ["Sütun", "Açıklama", "Örnek Değer"] });
+    ws2["!cols"] = [{ wch: 16 }, { wch: 62 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, ws2, "Açıklama");
+
+    XLSX.writeFile(wb, "degerlendirici-basvuru-sablonu.xlsx");
+    bildir("Boş başvuru şablonu indirildi (başlık satırı + Açıklama sayfası).", "ok");
   }
 
   function handleFile(file) {
