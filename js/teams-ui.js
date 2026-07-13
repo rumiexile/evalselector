@@ -451,9 +451,11 @@
   }
 
   // Aktif türün yedek havuzunu ekrana çizer.
+  // İlk takım oluşturulmadan görünmez (havuz, kurulmuş takımları besler).
   function renderHavuz() {
     var div = $("yedek-havuzu");
     if (!div) return;
+    if (!Object.keys(T.takimlar).length) { div.innerHTML = ""; return; }
     var turId = T.aktifTur, t = template(), hav = havuzOf(turId);
     var roller = ["baskan", "akademik"];
     if (t.idariZorunlu) roller.push("idari");
