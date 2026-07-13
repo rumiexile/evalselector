@@ -812,14 +812,18 @@
     var sel = $("coi-aday");
     var onceki = sel.value;
     sel.innerHTML = '<option value="">Değerlendirici seçiniz…</option>';
-    pool().forEach(function (r) {
+    pool().map(function (r) {
       var tc = Teams.tcOf(r);
-      if (!tc) return;
-      var o = document.createElement("option");
-      o.value = tc;
-      o.textContent = ((r["Ad"] || "") + " " + (r["Soyad"] || "")).trim() + " (" + maskTc(tc) + ")";
-      sel.appendChild(o);
-    });
+      if (!tc) return null;
+      return { tc: tc, ad: ((r["Ad"] || "") + " " + (r["Soyad"] || "")).trim() };
+    }).filter(Boolean)
+      .sort(function (a, b) { return a.ad.localeCompare(b.ad, "tr"); })
+      .forEach(function (k) {
+        var o = document.createElement("option");
+        o.value = k.tc;
+        o.textContent = k.ad + " (" + maskTc(k.tc) + ")";
+        sel.appendChild(o);
+      });
     if (onceki) sel.value = onceki;
     renderCoiListe();
   }
