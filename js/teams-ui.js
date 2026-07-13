@@ -667,6 +667,22 @@
     var elenen = [];
     var baslik, altyazi;
 
+    // Adayları kriter puanına göre azalan sırala (puansızlar sona, ada göre)
+    function puanOf(r) {
+      return window.PoolAccess && window.PoolAccess.score ? window.PoolAccess.score(Teams.tcOf(r)) : null;
+    }
+    function puanSirala(rows) {
+      return rows.slice().sort(function (a, b) {
+        var pa = puanOf(a), pb = puanOf(b);
+        if (pa === null && pb === null) {
+          return ((a["Ad"] || "") + " " + (a["Soyad"] || "")).localeCompare((b["Ad"] || "") + " " + (b["Soyad"] || ""), "tr");
+        }
+        if (pa === null) return 1;
+        if (pb === null) return -1;
+        return pb - pa;
+      });
+    }
+
     if (mod === "asil") {
       var kurum = opts.kurum, takim = T.takimlar[kurum], s = takim.sablon, turId = takim.turId;
       var takimKurumlari = [];
@@ -678,7 +694,7 @@
       var yedekSonuc = Teams.uygunAdaylar(yedekRows, rol, kurum, s, {
         coiMap: T.coi, takimTcler: Teams.takimTcleri(takim), takimKurumlari: kurumF
       });
-      if (yedekSonuc.uygun.length) gruplar.push({ etiket: "Yedek havuzundan", rows: yedekSonuc.uygun, kaynak: "yedek" });
+      if (yedekSonuc.uygun.length) gruplar.push({ etiket: "Yedek havuzundan", rows: puanSirala(yedekSonuc.uygun), kaynak: "yedek" });
       elenen = elenen.concat(yedekSonuc.red.map(function (r) { return { row: r.row, sebep: "Yedek — " + r.sebep }; }));
 
       // 2) Değerlendirici havuzundan (henüz hiçbir yere bağlı olmayanlar)
@@ -686,18 +702,18 @@
         coiMap: T.coi, atananlar: bagliTcler({ haricKurum: kurum }),
         takimTcler: Teams.takimTcleri(takim), takimKurumlari: kurumF
       });
-      gruplar.push({ etiket: "Değerlendirici havuzundan (yeni)", rows: freshSonuc.uygun, kaynak: "havuz" });
+      gruplar.push({ etiket: "Değerlendirici havuzundan (yeni)", rows: puanSirala(freshSonuc.uygun), kaynak: "havuz" });
       elenen = elenen.concat(freshSonuc.red);
 
       baslik = esc(kurum);
       altyazi = esc(Teams.ROL_LABELS[rol]) + " — asil üye seçimi. Önce bu türün yedek havuzu, sonra " +
-        "değerlendirici havuzu gösterilir; her ikisi de şablon ve çıkar çatışması kontrolünden geçer.";
+        "değerlendirici havuzu gösterilir; her grup kriter puanına göre (yüksekten düşüğe) sıralanır.";
     } else { // havuz
       var hTurId = opts.turId, tmpl = template();
       var hSonuc = Teams.uygunAdaylar(pool(), rol, "", tmpl, {
         atananlar: bagliTcler(), takimTcler: new Set(havuzOf(hTurId)[rol])
       });
-      gruplar.push({ etiket: "Uygun değerlendiriciler", rows: hSonuc.uygun, kaynak: "havuz-ekle" });
+      gruplar.push({ etiket: "Uygun değerlendiriciler", rows: puanSirala(hSonuc.uygun), kaynak: "havuz-ekle" });
       elenen = hSonuc.red;
       baslik = esc(turAdi(hTurId)) + " — Yedek Havuzu";
       altyazi = esc(Teams.ROL_LABELS[rol]) + " yedeği ekleme. Henüz hiçbir takımda ya da havuzda görevli " +
