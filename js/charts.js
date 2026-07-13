@@ -111,8 +111,12 @@
   }
 
   // ---- Ana pano ----
-  function renderDashboard(rows) {
+  // opts: { toplamEtiket:"Toplam Başvuru", birim:"başvuru" } — kayıt türü etiketleri
+  function renderDashboard(rows, opts) {
     rows = rows || [];
+    opts = opts || {};
+    var toplamEtiket = opts.toplamEtiket || "Toplam Başvuru";
+    var birim = opts.birim || "başvuru";
     var toplam = rows.length;
     if (!toplam) return "";
 
@@ -161,7 +165,7 @@
 
     // Özet tümceler
     html += '<div class="an-tiles">' +
-      tile(toplam, "Toplam Başvuru") +
+      tile(toplam, toplamEtiket) +
       tile(tip.akademik + " / " + tip.idari + " / " + tip.ogrenci, "Akademik / İdari / Öğrenci") +
       tile("%" + pct(doktora, toplam), "Doktoralı oranı") +
       tile((Math.round((gorevTop / toplam) * 10) / 10), "Ortalama görev sayısı") +
@@ -177,15 +181,15 @@
     html += donut("Mevcut havuz / Yeni oranı (E/Y)",
       [{ label: "Mevcut havuz (E)", value: eSay, renk: CAT[0] }, { label: "Yeni (Y)", value: ySay, renk: CAT[1] }]
         .concat(eyBelirsiz ? [{ label: "Belirtilmemiş", value: eyBelirsiz, renk: CAT[3] }] : []),
-      toplam, "başvuru");
+      toplam, birim);
     html += donut("Tip dağılımı",
       [{ label: "Akademik", value: tip.akademik, renk: CAT[0] }, { label: "İdari", value: tip.idari, renk: CAT[1] },
        { label: "Öğrenci", value: tip.ogrenci, renk: CAT[2] }].concat(tip.diger ? [{ label: "Diğer", value: tip.diger, renk: CAT[3] }] : []),
-      toplam, "başvuru");
+      toplam, birim);
     html += donut("Cinsiyet dengesi (ada göre tahmini)",
       [{ label: "Kadın", value: cins.K, renk: CAT[0] }, { label: "Erkek", value: cins.E, renk: CAT[1] },
        { label: "Belirsiz", value: cins["?"], renk: CAT[3] }],
-      toplam, "başvuru");
+      toplam, birim);
     html += "</div>";
 
     return html;

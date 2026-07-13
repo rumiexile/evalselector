@@ -536,12 +536,28 @@
     div.appendChild(card);
   }
 
+  // Kurulan tüm takımların asil kadrosunun analitiğini (Havuz Analitiği ile aynı
+  // grafiklerle) çizer; renderTakimlar her değişiklikte çağırdığından güncel kalır.
+  function renderTakimAnalitigi() {
+    var sec = $("takim-analitigi-section"), body = $("takim-analitigi");
+    if (!sec || !body || !window.Charts) return;
+    var idx = poolIndex(), tcler = new Set();
+    Object.keys(T.takimlar).forEach(function (kurum) {
+      Teams.asilTcleri(T.takimlar[kurum]).forEach(function (tc) { tcler.add(tc); });
+    });
+    var rows = [];
+    tcler.forEach(function (tc) { if (idx[tc]) rows.push(idx[tc]); });
+    if (!rows.length) { sec.hidden = true; body.innerHTML = ""; return; }
+    body.innerHTML = Charts.renderDashboard(rows, { toplamEtiket: "Takımdaki Üye", birim: "üye" });
+    sec.hidden = false;
+  }
+
   function renderTakimlar() {
     var div = $("takim-listesi");
     div.innerHTML = "";
     if (!T.seciliKurumlar.length) {
       div.innerHTML = '<p class="hint">Takım kurmak için önce yukarıdan değerlendirilecek kurumları seçiniz.</p>';
-      renderHavuzDurum(); renderHavuz(); renderCoiAdaylar();
+      renderHavuzDurum(); renderHavuz(); renderCoiAdaylar(); renderTakimAnalitigi();
       return;
     }
     var idx = poolIndex();
@@ -654,6 +670,7 @@
     renderHavuzDurum();
     renderHavuz();
     renderCoiAdaylar();
+    renderTakimAnalitigi();
   }
 
   // ---------------- Aday seçim penceresi ----------------
