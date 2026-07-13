@@ -319,6 +319,12 @@
 
   function runAnalysis() {
     state.analiz = Engine.analyze(state.rows, state.criteria);
+    // TcNo -> kriter puanı (takım modülünde üye rozetinde gösterilir)
+    state.scoreByTc = {};
+    state.analiz.results.forEach(function (r) {
+      var tc = String(r.data["TcNo"] === null || r.data["TcNo"] === undefined ? "" : r.data["TcNo"]).trim();
+      if (tc && r.total !== null) state.scoreByTc[tc] = r.total;
+    });
     renderSummary();
     renderTable();
     $("results-section").hidden = false;
@@ -599,7 +605,15 @@
   }
 
   // Takım oluşturma modülünün havuza salt-okunur erişimi
-  window.PoolAccess = { rows: function () { return state.rows || []; } };
+  window.PoolAccess = {
+    rows: function () { return state.rows || []; },
+    // Modül 1 kriter puanı (0–100) veya null
+    score: function (tc) {
+      if (!state.scoreByTc) return null;
+      var v = state.scoreByTc[String(tc).trim()];
+      return v === undefined ? null : v;
+    }
+  };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();

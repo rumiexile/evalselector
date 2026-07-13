@@ -344,6 +344,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-fam
 .r-yeni { background: #faf0d8; color: var(--warn); }
 .r-dil { background: var(--brand-tint); color: var(--brand-2); }
 .r-coi { background: #f8e4e4; color: var(--err); }
+.r-puan { background: #e2f2ea; color: var(--ok); }
 
 .team-uyari { padding: 11px 16px; background: #fdf6ec; border-top: 1px solid var(--line); font-size: 13.5px; }
 .team-uyari ul { margin: 4px 0 0; padding-left: 20px; }

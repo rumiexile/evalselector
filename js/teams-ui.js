@@ -366,6 +366,10 @@
               '<span class="uye-alt warn">Havuz verisinde bulunamadı</span>';
     } else {
       var rozetler = [];
+      var puan = window.PoolAccess && window.PoolAccess.score ? window.PoolAccess.score(tc) : null;
+      if (puan !== null && puan !== undefined) {
+        rozetler.push('<span class="rozet r-puan" title="Değerlendirici seçim kriter puanı (0–100)">Puan ' + puan + "</span>");
+      }
       if (Teams.isYeni(row)) rozetler.push('<span class="rozet r-yeni">İlk kez</span>');
       var dil = Teams.dilPuani(row);
       if (dil !== null) rozetler.push('<span class="rozet r-dil">Dil ' + dil + "</span>");
@@ -425,7 +429,9 @@
     var dilTxt = "—";
     if (dilObj && dilObj.puan !== null) dilTxt = dilObj.sinav + " " + dilObj.ham + " (100'lük: " + dilObj.puan + ")";
     else if (dilObj && dilObj.puan === null) dilTxt = "Çözümlenemedi";
+    var kriterPuan = window.PoolAccess && window.PoolAccess.score ? window.PoolAccess.score(tc) : null;
     var ozet = [
+      ["Kriter puanı (seçim)", kriterPuan === null || kriterPuan === undefined ? "—" : kriterPuan + " / 100"],
       ["Tip", tipEt],
       ["Temel Alan", row["Temel Alan"] || "—"],
       ["Bilim Alanı", row["Bilim Alan"] || "—"],
