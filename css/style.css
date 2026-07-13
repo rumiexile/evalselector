@@ -326,7 +326,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-fam
 .slot-tablo { width: 100%; border-collapse: collapse; font-size: 14px; }
 .slot-tablo th, .slot-tablo td { padding: 9px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
 .slot-tablo th { width: 210px; font-weight: 600; background: var(--bg); }
-.slot-tablo .slot-btn { width: 110px; text-align: right; }
+.slot-tablo .slot-btn { width: 168px; text-align: right; }
 .yedek-satir { background: var(--bg); }
 
 .uye { display: flex; flex-direction: column; gap: 1px; }
@@ -363,6 +363,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-fam
 
 /* Yedek havuzu kartı — takım kartlarından ayrışması için altın vurgu */
 .havuz-card .team-head { border-left-color: var(--accent); }
+
+/* Koltuk düğmeleri (Değiştir + Kaldır yan yana) */
+.slot-btns { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+.btn-kaldir { color: var(--err); border-color: var(--line); }
+.btn-kaldir:hover { background: var(--err-bg, #f8e3e2); border-color: var(--err); }
 
 .coi-kutu { margin-top: 18px; }
 .coi-kutu select, .coi-kutu input { max-width: 280px; }

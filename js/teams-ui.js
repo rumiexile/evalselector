@@ -571,8 +571,12 @@
           var rol = sat[0], etiket = sat[1], tc = sat[2], ai = sat[3];
           tbl += '<tr><th>' + esc(etiket) + "</th><td>" +
             (tc ? uyeChip(tc, rol, kurum, false, true) : '<span class="hint">— boş —</span>') +
-            '</td><td class="slot-btn"><button type="button" class="btn-mini" data-slot-rol="' + rol +
-            '" data-slot-ai="' + ai + '">' + (tc ? "Değiştir" : "Seç") + "</button></td></tr>";
+            '</td><td class="slot-btn"><div class="slot-btns">' +
+            '<button type="button" class="btn-mini" data-slot-rol="' + rol + '" data-slot-ai="' + ai + '">' +
+            (tc ? "Değiştir" : "Seç") + "</button>" +
+            (tc ? '<button type="button" class="btn-mini btn-kaldir" data-kaldir-rol="' + rol +
+              '" data-kaldir-ai="' + ai + '">Kaldır</button>' : "") +
+            "</div></td></tr>";
         });
         tbl += "</tbody></table>";
         govde.innerHTML = tbl;
@@ -611,6 +615,8 @@
           }
         } else if (b.dataset.slotRol) {
           openPicker({ mod: "asil", kurum: kurum, rol: b.dataset.slotRol, akademikIdx: parseInt(b.dataset.slotAi, 10) });
+        } else if (b.dataset.kaldirRol) {
+          kaldirUye(kurum, b.dataset.kaldirRol, parseInt(b.dataset.kaldirAi, 10));
         }
       });
 
@@ -753,6 +759,22 @@
     bildir(eski && eski !== tc
       ? (kaynak === "yedek" ? "Yedekten çağrıldı; önceki asil yedek havuzuna alındı." : "Üye değiştirildi; önceki asil yedek havuzuna alındı.")
       : "Üye atandı.", "ok");
+  }
+
+  // Bir koltuktaki üyeyi (onay alarak) kaldırır; koltuk boş kalır. Kaldırılan
+  // kişi serbest bırakılır (havuza taşınmaz). Boş koltuk, alttaki kontrol
+  // ekranında şablona göre eksiklik olarak bildirilir.
+  function kaldirUye(kurum, rol, akademikIdx) {
+    var tk = T.takimlar[kurum];
+    var tc = rol === "akademik" ? tk.asil.akademik[akademikIdx] : tk.asil[rol];
+    if (!tc) return;
+    var row = poolIndex()[tc];
+    var ad = row ? ((row["Ad"] || "") + " " + (row["Soyad"] || "")).trim() : "TcNo " + maskTc(tc);
+    if (!confirm("\"" + ad + "\" " + Teams.ROL_LABELS[rol] + " koltuğundan kaldırılacak ve koltuk boş kalacak. Onaylıyor musunuz?")) return;
+    if (rol === "akademik") tk.asil.akademik.splice(akademikIdx, 1);
+    else tk.asil[rol] = null;
+    renderTakimlar();
+    bildir("Üye kaldırıldı; koltuk boş bırakıldı. Eksiklik, takım kontrol panelinde bildirilir.", "");
   }
 
   // ---------------- ÇÇ beyanları ----------------
