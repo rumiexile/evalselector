@@ -264,11 +264,13 @@
   }
 
   // ---------------- Takımlar ----------------
+  // Dönem içinde başka takımlarda görevli (asil VEYA yedek) tüm kişiler.
+  // Bir kişi aynı anda tek görev alabildiğinden bu küme her yeni seçimden dışlanır.
   function atananlarSet(haricKurum) {
     var s = new Set();
     Object.keys(T.takimlar).forEach(function (kurum) {
       if (kurum === haricKurum) return;
-      Teams.asilTcleri(T.takimlar[kurum]).forEach(function (tc) { s.add(tc); });
+      Teams.takimTcleri(T.takimlar[kurum]).forEach(function (tc) { s.add(tc); });
     });
     return s;
   }
@@ -395,7 +397,7 @@
         govde.innerHTML = tbl;
         card.appendChild(govde);
 
-        var uyarilar = Teams.validateTeam(takim, pool(), { coiMap: T.coi, digerAsiller: atananlarSet(kurum) });
+        var uyarilar = Teams.validateTeam(takim, pool(), { coiMap: T.coi, digerTakimTcler: atananlarSet(kurum) });
         var udiv = document.createElement("div");
         udiv.className = "team-uyari " + (uyarilar.length ? "" : "team-uygun");
         udiv.innerHTML = uyarilar.length
@@ -473,7 +475,8 @@
     });
     var ctx = {
       coiMap: T.coi,
-      atananlar: mod === "asil" ? atananlarSet(kurum) : null,
+      // Dönem içinde tek görev kuralı asil ve yedek seçiminin ikisinde de geçerli
+      atananlar: atananlarSet(kurum),
       takimTcler: Teams.takimTcleri(takim),
       takimKurumlari: mod === "asil" && s.ayniKurumTek ? kurumlar : null
     };
@@ -631,7 +634,7 @@
       ["baskan", "akademik", "idari", "ogrenci"].forEach(function (rol) {
         (tk.yedek[rol] || []).forEach(function (tc) { satirlar.push(kisiSatiri(kurum, tk, rol, tc, "Yedek")); });
       });
-      var uyarilar = Teams.validateTeam(tk, pool(), { coiMap: T.coi, digerAsiller: atananlarSet(kurum) });
+      var uyarilar = Teams.validateTeam(tk, pool(), { coiMap: T.coi, digerTakimTcler: atananlarSet(kurum) });
       ozet.push({
         "Kurum": kurum, "Değerlendirme Türü": turAdi(tk.turId), "Dönem": tk.donem || T.donem,
         "Takım Büyüklüğü (şablon)": Teams.takimBuyuklugu(tk.sablon),

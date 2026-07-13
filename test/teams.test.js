@@ -115,12 +115,15 @@ const yeniler = [t.asil.baskan].concat(t.asil.akademik, [t.asil.idari])
   .filter(tc => tc && Teams.isYeni(havuz.find(r => r["TcNo"] === tc)));
 check("oto: yeni üye aralığı", yeniler.length >= 1 && yeniler.length <= 2, yeniler);
 
-// Dönem genelinde tekrarlama: ilk takımın asilleri ikinci takımda kullanılmaz
-const atananlar = Teams.asilTcleri(t);
+// Dönem içinde tek görev: ilk takımın TÜM üyeleri (asil + yedek) başka takımda
+// hiçbir rolde (asil ya da yedek) kullanılamaz.
+const atananlar = Teams.takimTcleri(t);
+const uygunY = Teams.uygunAdaylar(havuz, "akademik", "Y Üniversitesi", kap, { atananlar: atananlar });
+check("uygun: başka takımın asil+yedeği dışlanır",
+  uygunY.uygun.every(r => !atananlar.has(Teams.tcOf(r))), uygunY.uygun.map(r => r["TcNo"]));
 const oto2 = Teams.autoAssign(havuz, "Y Üniversitesi", "kap", "2026-1", kap, { rng, atananlar });
-const uyeler2 = [oto2.takim.asil.baskan].concat(oto2.takim.asil.akademik,
-  [oto2.takim.asil.idari, oto2.takim.asil.ogrenci]).filter(Boolean);
-check("oto: dönemde çifte asil görev yok", uyeler2.every(tc => !atananlar.has(tc)), uyeler2);
+const tum2 = [...Teams.takimTcleri(oto2.takim)];
+check("oto: dönemde çifte görev yok (yedek dahil)", tum2.every(tc => !atananlar.has(tc)), tum2);
 check("oto: yetersiz havuz uyarı üretir", oto2.uyarilar.length > 0, oto2.uyarilar);
 
 // ---- Doğrulama uyarıları ----
@@ -135,11 +138,24 @@ check("doğrulama: havuzda olmayan tc", Teams.validateTeam(
   Object.assign(Teams.bosTakim("X", "kap", "d", kap), { asil: { baskan: "999", akademik: [], idari: null, ogrenci: null } }),
   havuz, {}).some(x => x.indexOf("bulunamadı") !== -1));
 
-// Çapraz takım kontrolü: başka takımda asil olan üye uyarı üretir
+// Çapraz takım kontrolü: başka takımda görevli asil üye uyarı üretir
 const capraz = Teams.bosTakim("X Üniversitesi", "kap", "2026-1", kap);
 capraz.asil.baskan = "1";
-const v3 = Teams.validateTeam(capraz, havuz, { digerAsiller: new Set(["1"]) });
-check("doğrulama: çifte asil görev uyarısı", v3.some(x => x.indexOf("başka bir takımda") !== -1), v3);
+const v3 = Teams.validateTeam(capraz, havuz, { digerTakimTcler: new Set(["1"]) });
+check("doğrulama: çifte görev uyarısı (asil)", v3.some(x => x.indexOf("başka bir takımda") !== -1), v3);
+
+// Yedekler de dönem içinde tek görev kuralına tabidir
+const yTest = Teams.bosTakim("Z Üniversitesi", "kap", "2026-1", kap);
+yTest.yedek.akademik = ["3"];
+const vY = Teams.validateTeam(yTest, havuz, { digerTakimTcler: new Set(["3"]) });
+check("doğrulama: yedek de çapraz takım kuralına tabi",
+  vY.some(x => x.indexOf("yedeği") !== -1 && x.indexOf("başka bir takımda") !== -1), vY);
+
+// Aynı kişi aynı takımda birden fazla koltukta olamaz (asil + yedek)
+const dup = Teams.bosTakim("Z Üniversitesi", "kap", "2026-1", kap);
+dup.asil.baskan = "1"; dup.yedek.akademik = ["1"];
+const vD = Teams.validateTeam(dup, havuz, {});
+check("doğrulama: takım içi mükerrer koltuk", vD.some(x => x.indexOf("birden fazla koltukta") !== -1), vD);
 
 // maxYeni kontrolü
 const cokYeni = Teams.bosTakim("X Üniversitesi", "kap", "2026-1", kap);

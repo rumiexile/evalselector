@@ -134,8 +134,9 @@
   }
 
   // ---- Uygun aday listesi ------------------------------------------------
-  // ctx: { coiMap, atananlar:Set(tc — dönemde asil görevli), takimTcler:Set(tc — bu takımda),
-  //        takimKurumlari:[üniversite adları — ayniKurumTek için] }
+  // ctx: { coiMap, atananlar:Set(tc — dönemde başka takımlarda asil VEYA yedek görevli),
+  //        takimTcler:Set(tc — bu takımda), takimKurumlari:[üniversite adları — ayniKurumTek için] }
+  // Bir kişi dönem içinde tek görev alabilir; asil ya da yedek olması fark etmez.
   // Dönen değer: {uygun: [row...], red: [{row, sebep}...]}
   function uygunAdaylar(pool, rol, kurum, template, ctx) {
     ctx = ctx || {};
@@ -145,7 +146,7 @@
       if (!tc) return; // kimliksiz kayıt takıma atanamaz
       var sebep = null;
       if (ctx.takimTcler && ctx.takimTcler.has(tc)) sebep = "Bu takımda zaten görevli.";
-      else if (ctx.atananlar && ctx.atananlar.has(tc)) sebep = "Bu dönemde başka bir takımda asil görevli.";
+      else if (ctx.atananlar && ctx.atananlar.has(tc)) sebep = "Bu dönemde başka bir takımda görevli (asil/yedek); aynı anda tek görev alınabilir.";
       else sebep = coiSebebi(row, kurum, ctx.coiMap) || rolSebebi(row, rol, template);
       if (!sebep && template.ayniKurumTek && ctx.takimKurumlari) {
         var u = TP.norm(row["Universite"]);
@@ -204,7 +205,7 @@
   }
 
   // Otomatik (rastlantısal) takım kurulumu.
-  // opts: { coiMap, atananlar:Set, rng }
+  // opts: { coiMap, atananlar:Set(dönemde başka takımlarda görevli asil+yedek tümü), rng }
   // Dönen değer: { takim, uyarilar: [metin] }
   function autoAssign(pool, kurum, turId, donem, template, opts) {
     opts = opts || {};
@@ -319,14 +320,37 @@
         if (coi) uyarilar.push(adEtiketi(row, tc) + ": " + coi);
         var rs = rolSebebi(row, rol, t);
         if (rs) uyarilar.push(adEtiketi(row, tc) + " (" + ROL_LABELS[rol] + "): " + rs);
-        if (opts.digerAsiller && opts.digerAsiller.has(tc)) {
-          uyarilar.push(adEtiketi(row, tc) + ": bu dönemde başka bir takımda da asil görevli.");
+        if (opts.digerTakimTcler && opts.digerTakimTcler.has(tc)) {
+          uyarilar.push(adEtiketi(row, tc) + ": bu dönemde başka bir takımda görevli (aynı anda tek görev alınabilir).");
         }
         // Öğrenci değerlendiriciler "ilk kez görev" sayımına dahil edilmez
         if (rol !== "ogrenci" && isYeni(row)) yeniSayisi++;
         var u = TP.norm(row["Universite"]);
         if (u) kurumSayaci[u] = (kurumSayaci[u] || 0) + 1;
       });
+    });
+
+    // Yedekler de dönem içinde tek görev kuralına tabidir: başka takımlarda
+    // (asil ya da yedek) görevli bir kişi bu takıma yedek de olamaz.
+    ["baskan", "akademik", "idari", "ogrenci"].forEach(function (rol) {
+      (takim.yedek[rol] || []).forEach(function (tc) {
+        if (opts.digerTakimTcler && opts.digerTakimTcler.has(tc)) {
+          uyarilar.push(adEtiketi(rowOf(tc), tc) + " (" + ROL_LABELS[rol] +
+            " yedeği): bu dönemde başka bir takımda görevli (aynı anda tek görev alınabilir).");
+        }
+      });
+    });
+
+    // Aynı kişi bu takım içinde birden fazla koltukta (asil/yedek) olamaz
+    var sayim = {};
+    [takim.asil.baskan, takim.asil.idari, takim.asil.ogrenci]
+      .concat(takim.asil.akademik)
+      .concat(takim.yedek.baskan, takim.yedek.akademik, takim.yedek.idari, takim.yedek.ogrenci)
+      .forEach(function (tc) { if (tc) sayim[tc] = (sayim[tc] || 0) + 1; });
+    Object.keys(sayim).forEach(function (tc) {
+      if (sayim[tc] > 1) {
+        uyarilar.push(adEtiketi(rowOf(tc), tc) + ": aynı takımda birden fazla koltukta yer alıyor (aynı anda tek görev).");
+      }
     });
 
     if (t.minYeni > 0 && yeniSayisi < t.minYeni) {
