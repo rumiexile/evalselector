@@ -1,0 +1,25 @@
+<!-- @dsCard group="Colors" viewport="700x170" name="Status & seals" subtitle="Muted institutional status + accreditation metals" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 16px; background: var(--surface-page); font-family: var(--font-secondary); }
+  .ramp { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .sw { height: 92px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; justify-content: flex-end; padding: 8px; }
+  .sw span { font-size: 10px; letter-spacing: .04em; }
+  .name { font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="ramp">
+  <div class="sw" style="background: var(--success); color: #fff;"><span class="name">success</span><span>#1f8a5b</span></div>
+  <div class="sw" style="background: var(--warning); color: #fff;"><span class="name">warning</span><span>#c8890f</span></div>
+  <div class="sw" style="background: var(--danger); color: #fff;"><span class="name">danger</span><span>#c23b3b</span></div>
+  <div class="sw" style="background: var(--info); color: #fff;"><span class="name">info</span><span>285C</span></div>
+  <div class="sw" style="background: var(--seal-gold); color: #fff;"><span class="name">seal-gold</span><span>5-year</span></div>
+  <div class="sw" style="background: var(--seal-silver); color: #fff;"><span class="name">seal-silver</span><span>2-year</span></div>
+</div>
+</body>
+</html>

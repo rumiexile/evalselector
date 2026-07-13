@@ -1,0 +1,29 @@
+<!-- @dsCard group="Colors" viewport="700x170" name="Neutrals" subtitle="Cool grey ramp tuned toward the blue" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 16px; background: var(--surface-page); font-family: var(--font-secondary); }
+  .ramp { display: grid; grid-template-columns: repeat(11, 1fr); gap: 6px; }
+  .sw { height: 92px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); display: flex; align-items: flex-end; padding: 6px; }
+  .sw span { font-size: 9px; letter-spacing: .04em; }
+</style>
+</head>
+<body>
+<div class="ramp">
+  <div class="sw" style="background: var(--grey-950); color: #fff;"><span>950</span></div>
+  <div class="sw" style="background: var(--grey-900); color: #fff;"><span>900</span></div>
+  <div class="sw" style="background: var(--grey-800); color: #fff;"><span>800</span></div>
+  <div class="sw" style="background: var(--grey-700); color: #fff;"><span>700</span></div>
+  <div class="sw" style="background: var(--grey-600); color: #fff;"><span>600</span></div>
+  <div class="sw" style="background: var(--grey-500); color: #fff;"><span>500</span></div>
+  <div class="sw" style="background: var(--grey-400); color: #123;"><span>400</span></div>
+  <div class="sw" style="background: var(--grey-300); color: #123;"><span>300</span></div>
+  <div class="sw" style="background: var(--grey-200); color: #123;"><span>200</span></div>
+  <div class="sw" style="background: var(--grey-100); color: #123;"><span>100</span></div>
+  <div class="sw" style="background: var(--grey-50); color: #123;"><span>50</span></div>
+</div>
+</body>
+</html>

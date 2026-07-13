@@ -1,0 +1,39 @@
+<!-- @dsCard group="Components" viewport="700x300" name="Logotype" subtitle="Official YÖKAK / THEQC logo lockups" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; padding: 20px; background: var(--surface-page); }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 32px; margin-bottom: 18px; }
+  .dark { background: var(--yokak-blue-800); padding: 14px 20px; border-radius: var(--radius-md); display: inline-flex; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  window.YOKAK_ASSET_BASE = "../../assets/logos";
+  const { Logotype } = window.YKAKDesignSystem_c4c6af;
+  function Demo() {
+    return (
+      <div>
+        <div className="row">
+          <Logotype lang="en" size="md" />
+          <Logotype lang="tr" size="md" />
+        </div>
+        <div className="row">
+          <span className="dark"><Logotype lang="en" variant="reversed" size="md" /></span>
+          <Logotype lang="tr" variant="mono" size="md" />
+        </div>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script>
+</body>
+</html>

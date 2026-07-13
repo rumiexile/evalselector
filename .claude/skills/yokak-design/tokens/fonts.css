@@ -1,0 +1,86 @@
+/* ============================================================
+   YÖKAK — Web fonts
+   Primary: Camber (institutional logotype + UI)
+   Secondary: DIN Pro (data, labels, technical text)
+   ============================================================ */
+
+/* ---- Camber (primary) ---- */
+@font-face {
+  font-family: "Camber";
+  src: url("../assets/fonts/Camber-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Camber";
+  src: url("../assets/fonts/Camber-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Camber";
+  src: url("../assets/fonts/Camber-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Camber";
+  src: url("../assets/fonts/Camber-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Camber";
+  src: url("../assets/fonts/Camber-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Camber";
+  src: url("../assets/fonts/Camber-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ---- DIN Pro (secondary) ---- */
+@font-face {
+  font-family: "DIN Pro";
+  src: url("../assets/fonts/DINPro-Light.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DIN Pro";
+  src: url("../assets/fonts/DINPro-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DIN Pro";
+  src: url("../assets/fonts/DINPro-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DIN Pro";
+  src: url("../assets/fonts/DINPro-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "DIN Pro";
+  src: url("../assets/fonts/DINPro-Black.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}

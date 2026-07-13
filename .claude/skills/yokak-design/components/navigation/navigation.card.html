@@ -1,0 +1,29 @@
+<!-- @dsCard group="Components" viewport="700x140" name="Breadcrumb" subtitle="Navigation trail" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body { margin: 0; padding: 24px; background: var(--surface-page); }</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const { Breadcrumb } = window.YKAKDesignSystem_c4c6af;
+  function Demo() {
+    return (
+      <Breadcrumb items={[
+        { label: "Home", href: "/" },
+        { label: "Institutions", href: "/institutions" },
+        { label: "Boğaziçi University" },
+      ]} />
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script>
+</body>
+</html>

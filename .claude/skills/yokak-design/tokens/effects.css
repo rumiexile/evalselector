@@ -1,0 +1,35 @@
+/* ============================================================
+   YÖKAK — Effects: radii, borders, shadows, motion
+   The institutional identity is clean and rectilinear; radii
+   are restrained and shadows are soft and low-contrast.
+   ============================================================ */
+:root {
+  /* ---- Radii ---- */
+  --radius-none: 0;
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+
+  /* ---- Border widths ---- */
+  --border-hairline: 1px;
+  --border-thick: 2px;
+  /* Signature accent: a short gradient rule under section titles */
+  --rule-accent-height: 3px; /* @kind spacing */
+
+  /* ---- Shadows (cool, low) ---- */
+  --shadow-xs: 0 1px 2px rgba(27, 34, 44, 0.06);
+  --shadow-sm: 0 1px 3px rgba(27, 34, 44, 0.08), 0 1px 2px rgba(27, 34, 44, 0.04);
+  --shadow-md: 0 4px 12px rgba(27, 34, 44, 0.08);
+  --shadow-lg: 0 12px 28px rgba(27, 34, 44, 0.12);
+  --shadow-brand: 0 8px 24px rgba(0, 110, 183, 0.22);
+  --focus-shadow: 0 0 0 3px rgba(47, 147, 214, 0.35);
+
+  /* ---- Motion ---- */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);   /* @kind other */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);       /* @kind other */
+  --dur-fast: 120ms;   /* @kind other */
+  --dur-base: 200ms;   /* @kind other */
+  --dur-slow: 320ms;   /* @kind other */
+}

@@ -1,0 +1,129 @@
+<!-- @dsCard group="Evalselector" viewport="1180x1400" name="Değerlendirici Seçim Sistemi — branded" subtitle="YÖKAK re-skin of the evaluator selection app" -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Değerlendirici Seçim Sistemi — YÖKAK</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <div class="topbar-lockup">
+        <img class="topbar-logo" src="../../assets/logos/theqc-logo-en-white.png" alt="YÖKAK / THEQC" />
+        <div>
+          <h1>Değerlendirici Seçim Sistemi</h1>
+          <p class="sub">Değerlendirici başvurularının analizi, eğitim daveti önerisi ve değerlendirme takımlarının oluşturulması</p>
+        </div>
+      </div>
+      <nav class="modtabs" aria-label="Modüller">
+        <button type="button" class="modtab active" data-mod="secim">1 · Değerlendirici Seçimi</button>
+        <button type="button" class="modtab" data-mod="takim">2 · Takım Oluşturma</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <h2>1. Başvuru Dosyası</h2>
+      <div id="dropzone" class="dropzone" role="button" tabindex="0">
+        <p><strong>Excel dosyasını buraya sürükleyin</strong> ya da seçmek için tıklayın</p>
+        <p class="hint">Desteklenen biçimler: .xlsx, .xls, .csv — ilk çalışma sayfası okunur</p>
+      </div>
+      <div class="panel-actions">
+        <button type="button" class="btn btn-ghost">Örnek veriyle dene</button>
+      </div>
+      <p class="kvkk">
+        <strong>Veri gizliliği:</strong> Yüklenen dosya hiçbir sunucuya gönderilmez; tüm analiz bu
+        tarayıcı penceresi içinde gerçekleştirilir. Sayfa kapatıldığında veriler silinir.
+        T.C. kimlik numaraları ekranda maskelenerek gösterilir.
+      </p>
+    </section>
+
+    <section class="panel">
+      <h2>2. Kriter Seti</h2>
+      <p class="hint">Kriterler öntanımlı değerlerle gelir; ağırlıkları, zorunlu koşulları ve davet
+        parametrelerini düzenleyebilirsiniz. Değişiklikler tarayıcıda saklanır ve analiz otomatik yenilenir.</p>
+      <div class="crit-grid">
+        <fieldset>
+          <legend>Kriter Ağırlıkları</legend>
+          <div class="w-row"><label>Akademik unvan</label><input type="number" value="25" /></div>
+          <div class="w-row"><label>Tecrübe</label><input type="number" value="20" /></div>
+          <div class="w-row"><label>Alan uygunluğu</label><input type="number" value="30" /></div>
+          <div class="w-row"><label>Yabancı dil</label><input type="number" value="15" /></div>
+          <div class="w-row"><label>Öğrenim düzeyi</label><input type="number" value="10" /></div>
+        </fieldset>
+        <fieldset>
+          <legend>Zorunlu (Eleyici) Koşullar</legend>
+          <label class="chk"><input type="checkbox" checked /> Doktora / sanatta yeterlik şartı</label>
+          <div class="w-row"><label>Asgari akademik unvan</label>
+            <select><option>Dr. Öğr. Üyesi</option></select></div>
+          <div class="w-row"><label>Asgari yabancı dil puanı</label><input type="number" value="0" /></div>
+          <label class="chk"><input type="checkbox" checked /> İdari personel unvan şartından muaf</label>
+        </fieldset>
+        <fieldset>
+          <legend>Davet Parametreleri</legend>
+          <div class="w-row"><label>Davet eşik puanı</label><input type="number" value="70" /></div>
+          <div class="w-row"><label>Sınır bandı</label><input type="number" value="8" /></div>
+          <div class="w-row"><label>Kontenjan (0 = sınırsız)</label><input type="number" value="0" /></div>
+          <div class="w-row"><label>Mevcut havuz bonusu</label><input type="number" value="5" /></div>
+        </fieldset>
+        <fieldset>
+          <legend>Hedef Temel Alanlar</legend>
+          <p class="hint">Seçim yapılmazsa alan uygunluğu kriteri devre dışı kalır.</p>
+          <label class="chk"><input type="checkbox" checked /> Mühendislik</label>
+          <label class="chk"><input type="checkbox" checked /> Sağlık Bilimleri</label>
+          <label class="chk"><input type="checkbox" /> Sosyal Bilimler</label>
+          <label class="chk"><input type="checkbox" /> Fen Bilimleri</label>
+        </fieldset>
+      </div>
+      <div class="panel-actions">
+        <button type="button" class="btn btn-ghost">Öntanımlıya dön</button>
+        <button type="button" class="btn btn-ghost">Kriterleri indir (JSON)</button>
+        <label class="btn btn-ghost btn-file">Kriter dosyası yükle</label>
+      </div>
+    </section>
+
+    <section class="panel" id="results-section">
+      <h2>3. Analiz Sonuçları</h2>
+      <div id="summary-cards" class="cards">
+        <div class="card c-davet"><div class="card-num">142</div><div class="card-lbl">Davet Önerilir</div></div>
+        <div class="card c-sinirda"><div class="card-num">37</div><div class="card-lbl">Sınırda</div></div>
+        <div class="card c-uygun-degil"><div class="card-num">58</div><div class="card-lbl">Uygun Değil</div></div>
+        <div class="card c-eksik"><div class="card-num">19</div><div class="card-lbl">Eksik Veri</div></div>
+        <div class="card"><div class="card-num">256</div><div class="card-lbl">Toplam Başvuru</div></div>
+      </div>
+
+      <div class="table-toolbar">
+        <select><option>Tüm durumlar</option></select>
+        <select><option>Havuz + Yeni</option></select>
+        <input type="search" placeholder="Ad, üniversite veya alan ara…" />
+        <span class="hint">142 / 256 kayıt</span>
+        <button type="button" class="btn btn-primary">Rapor İndir (Excel)</button>
+      </div>
+
+      <div class="table-scroll">
+        <table class="results">
+          <thead>
+            <tr><th>Sıra</th><th>TcNo</th><th>Ad Soyad</th><th>Üniversite</th><th>Unvan</th><th>Temel Alan</th><th>E/Y</th><th class="num">Puan</th><th>Durum</th><th></th></tr>
+          </thead>
+          <tbody id="results-body">
+            <tr><td>1</td><td>123******45</td><td>Prof. Dr. Ayşe Yılmaz</td><td>Boğaziçi Üniversitesi</td><td>Prof.</td><td>Mühendislik</td><td>E</td><td class="num">94</td><td><span class="badge b-davet">Davet Önerilir</span></td><td><button class="btn-mini">Detay</button></td></tr>
+            <tr><td>2</td><td>234******12</td><td>Doç. Dr. Mehmet Demir</td><td>ODTÜ</td><td>Doç.</td><td>Fen Bilimleri</td><td>Y</td><td class="num">88</td><td><span class="badge b-davet">Davet Önerilir</span></td><td><button class="btn-mini">Detay</button></td></tr>
+            <tr><td>3</td><td>345******78</td><td>Dr. Öğr. Üyesi Zeynep Kaya</td><td>Hacettepe Üniversitesi</td><td>Dr. Öğr. Üyesi</td><td>Sağlık Bilimleri</td><td>E</td><td class="num">81</td><td><span class="badge b-davet">Davet Önerilir</span></td><td><button class="btn-mini">Detay</button></td></tr>
+            <tr><td>4</td><td>456******90</td><td>Doç. Dr. Ali Şahin</td><td>İstanbul Üniversitesi</td><td>Doç.</td><td>Sosyal Bilimler</td><td>Y</td><td class="num">67</td><td><span class="badge b-sinirda">Sınırda</span></td><td><button class="btn-mini">Detay</button></td></tr>
+            <tr><td>5</td><td>567******23</td><td>Öğr. Gör. Fatma Öztürk</td><td>Ege Üniversitesi</td><td>Öğr. Gör.</td><td>Mühendislik</td><td>Y</td><td class="num">44</td><td><span class="badge b-uygun-degil">Uygun Değil</span></td><td><button class="btn-mini">Detay</button></td></tr>
+            <tr><td>6</td><td>678******56</td><td>Dr. Can Arslan</td><td>—</td><td>—</td><td>—</td><td>Y</td><td class="num">—</td><td><span class="badge b-eksik">Eksik Veri</span></td><td><button class="btn-mini">Detay</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="kvkk">
+        Bu araç kural tabanlı otomatik ön değerlendirme yapar; sonuçlar <em>öneri</em> niteliğindedir.
+        Nihai davet kararı yetkili komisyona aittir.
+      </p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!-- @dsCard group="Colors" viewport="700x150" name="Signature gradient" subtitle="Logotype gradient — dark→mid blue" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 16px; background: var(--surface-page); font-family: var(--font-secondary); display: flex; gap: 10px; }
+  .g { flex: 1; height: 100px; border-radius: var(--radius-md); display: flex; align-items: flex-end; padding: 10px; color: #fff; font-size: 11px; letter-spacing: .04em; }
+</style>
+</head>
+<body>
+<div class="g" style="background: var(--yokak-gradient);">--yokak-gradient</div>
+<div class="g" style="background: var(--yokak-gradient-diagonal);">--yokak-gradient-diagonal</div>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 10px;">
+  <div style="height: 45px; border-radius: var(--radius-md); background: #fff; border: 1px solid var(--border-subtle); display: flex; align-items: center; padding: 0 12px;">
+    <span style="width: 56px; height: 3px; border-radius: 2px; background: var(--yokak-gradient); margin-right: 10px;"></span>
+    <span style="font-size: 11px; color: var(--text-muted);">.yokak-rule accent</span>
+  </div>
+  <div style="height: 45px; border-radius: var(--radius-md); background: var(--yokak-gradient); box-shadow: var(--shadow-brand); display: flex; align-items: center; justify-content: center; color: #fff; font-family: var(--font-primary); font-size: 13px; font-weight: 500;">Gradient CTA</div>
+</div>
+</body>
+</html>

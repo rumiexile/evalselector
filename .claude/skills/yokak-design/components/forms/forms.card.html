@@ -1,0 +1,44 @@
+<!-- @dsCard group="Components" viewport="700x420" name="Forms" subtitle="Input, Select, Checkbox, Radio" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../../styles.css" />
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body { margin: 0; padding: 20px; background: var(--surface-page); }
+  .row { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const { Input, Select, Checkbox, Radio } = window.YKAKDesignSystem_c4c6af;
+  function Demo() {
+    const [c, setC] = React.useState(true);
+    const [r, setR] = React.useState("full");
+    return (
+      <div>
+        <div className="row">
+          <Input label="Institution name" placeholder="e.g. Boğaziçi University" style={{ width: 220 }} />
+          <Input label="Contact email" error="Enter a valid email address" style={{ width: 220 }} />
+          <Select label="Institution type" style={{ width: 200 }}>
+            <option>State university</option>
+            <option>Foundation university</option>
+          </Select>
+        </div>
+        <div className="row">
+          <Checkbox label="I agree to the terms" checked={c} onChange={e => setC(e.target.checked)} />
+          <Radio name="tier" label="Full accreditation" checked={r === "full"} onChange={() => setR("full")} />
+          <Radio name="tier" label="Provisional" checked={r === "prov"} onChange={() => setR("prov")} />
+        </div>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script>
+</body>
+</html>

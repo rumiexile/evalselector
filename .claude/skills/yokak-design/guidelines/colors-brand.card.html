@@ -1,0 +1,26 @@
+<!-- @dsCard group="Colors" viewport="700x170" name="Brand blues" subtitle="PANTONE 7685C · 285C · 2915C + tints" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 16px; background: var(--surface-page); font-family: var(--font-secondary); }
+  .ramp { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+  .sw { height: 92px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; justify-content: flex-end; padding: 8px; }
+  .sw span { font-size: 10px; letter-spacing: .04em; }
+  .name { font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="ramp">
+  <div class="sw" style="background: var(--yokak-blue-900); color: #fff;"><span class="name">blue-900</span><span>#1d3c6b</span></div>
+  <div class="sw" style="background: var(--yokak-blue-800); color: #fff;"><span class="name">blue-800</span><span>7685C</span></div>
+  <div class="sw" style="background: var(--yokak-blue-600); color: #fff;"><span class="name">blue-600</span><span>285C</span></div>
+  <div class="sw" style="background: var(--yokak-blue-400); color: #fff;"><span class="name">blue-400</span><span>#2f93d6</span></div>
+  <div class="sw" style="background: var(--yokak-blue-300); color: #123;"><span class="name">blue-300</span><span>2915C</span></div>
+  <div class="sw" style="background: var(--yokak-blue-100); color: #123;"><span class="name">blue-100</span><span>#d3e8f7</span></div>
+  <div class="sw" style="background: var(--yokak-blue-50); color: #123;"><span class="name">blue-50</span><span>#eef6fc</span></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,78 @@
+/* ============================================================
+   YÖKAK — Color tokens
+   Source: Visual Identity Guidelines (KK EN V1.0 / July 2021)
+   The palette is built entirely on three institutional blues.
+   ============================================================ */
+:root {
+  /* ---- Brand blues (exact from guidelines) ---- */
+  --yokak-blue-900: #1d3c6b;            /* deep shade, derived for contrast */
+  --yokak-blue-800: #2b5597;            /* PANTONE 7685C — main dark blue   */
+  --yokak-blue-600: #006eb7;            /* PANTONE 285C  — main mid blue    */
+  --yokak-blue-400: #2f93d6;            /* derived step                    */
+  --yokak-blue-300: #5eb3e4;            /* PANTONE 2915C — secondary light  */
+  --yokak-blue-100: #d3e8f7;            /* tint for surfaces / fills        */
+  --yokak-blue-50:  #eef6fc;            /* faint tint                       */
+
+  /* ---- Signature gradient (logotype gradient) ---- */
+  --yokak-gradient: linear-gradient(90deg, #2b5597 0%, #006eb7 100%); /* @kind color */
+  --yokak-gradient-diagonal: linear-gradient(135deg, #2b5597 0%, #006eb7 60%, #5eb3e4 100%); /* @kind color */
+
+  /* ---- Neutrals (cool grey, tuned toward the blue) ---- */
+  --grey-950: #10151c;
+  --grey-900: #1b222c;
+  --grey-800: #2c3641;
+  --grey-700: #465262;
+  --grey-600: #5f6b7a;
+  --grey-500: #808a97;
+  --grey-400: #a5adb8;
+  --grey-300: #c9cfd7;
+  --grey-200: #e2e6eb;
+  --grey-100: #eef1f4;
+  --grey-50:  #f6f8fa;
+  --white:    #ffffff;
+  --black:    #000000;
+
+  /* ---- Semantic status (institutional, muted) ---- */
+  --success: #1f8a5b;
+  --success-tint: #e4f3ec;
+  --warning: #c8890f;
+  --warning-tint: #faf0d8;
+  --danger:  #c23b3b;
+  --danger-tint: #f8e4e4;
+  --info:    var(--yokak-blue-600);
+  --info-tint: var(--yokak-blue-50);
+
+  /* ---- Accreditation seal metals ---- */
+  --seal-gold:   #b08a3e;   /* 5-year full accreditation (gold foil)     */
+  --seal-silver: #8c96a1;   /* 2-year provisional accreditation (silver) */
+
+  /* =========================================================
+     Semantic aliases — reference these in components
+     ========================================================= */
+  --brand-primary:      var(--yokak-blue-600);
+  --brand-primary-strong: var(--yokak-blue-800);
+  --brand-accent:       var(--yokak-blue-300);
+
+  --text-strong:  var(--grey-950);
+  --text-body:    var(--grey-800);
+  --text-muted:   var(--grey-600);
+  --text-faint:   var(--grey-500);
+  --text-on-brand: var(--white);
+  --text-link:    var(--yokak-blue-600);
+  --text-link-hover: var(--yokak-blue-800);
+
+  --surface-page:  var(--white);
+  --surface-subtle: var(--grey-50);
+  --surface-sunken: var(--grey-100);
+  --surface-card:  var(--white);
+  --surface-brand: var(--yokak-blue-600);
+  --surface-brand-strong: var(--yokak-blue-800);
+  --surface-brand-tint: var(--yokak-blue-50);
+
+  --border-subtle: var(--grey-200);
+  --border-default: var(--grey-300);
+  --border-strong: var(--grey-400);
+  --border-brand:  var(--yokak-blue-600);
+
+  --focus-ring: var(--yokak-blue-400);
+}

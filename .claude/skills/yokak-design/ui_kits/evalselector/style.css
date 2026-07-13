@@ -6,18 +6,18 @@
 
    Font/logo url()s are written relative to THIS file living at
    ui_kits/evalselector/. When copying into the evalselector repo's
-   css/ folder, change "../assets/" → "../assets/".
+   css/ folder, change "../../assets/" → "../assets/".
    ============================================================ */
 
 /* ---- Camber (primary) ---- */
-@font-face { font-family:"Camber"; src:url("../assets/fonts/Camber-Light.ttf") format("truetype"); font-weight:300; font-style:normal; font-display:swap; }
-@font-face { font-family:"Camber"; src:url("../assets/fonts/Camber-Regular.ttf") format("truetype"); font-weight:400; font-style:normal; font-display:swap; }
-@font-face { font-family:"Camber"; src:url("../assets/fonts/Camber-Medium.ttf") format("truetype"); font-weight:500; font-style:normal; font-display:swap; }
-@font-face { font-family:"Camber"; src:url("../assets/fonts/Camber-Bold.ttf") format("truetype"); font-weight:700; font-style:normal; font-display:swap; }
+@font-face { font-family:"Camber"; src:url("../../assets/fonts/Camber-Light.ttf") format("truetype"); font-weight:300; font-style:normal; font-display:swap; }
+@font-face { font-family:"Camber"; src:url("../../assets/fonts/Camber-Regular.ttf") format("truetype"); font-weight:400; font-style:normal; font-display:swap; }
+@font-face { font-family:"Camber"; src:url("../../assets/fonts/Camber-Medium.ttf") format("truetype"); font-weight:500; font-style:normal; font-display:swap; }
+@font-face { font-family:"Camber"; src:url("../../assets/fonts/Camber-Bold.ttf") format("truetype"); font-weight:700; font-style:normal; font-display:swap; }
 /* ---- DIN Pro (data / numerals / labels) ---- */
-@font-face { font-family:"DIN Pro"; src:url("../assets/fonts/DINPro-Regular.otf") format("opentype"); font-weight:400; font-style:normal; font-display:swap; }
-@font-face { font-family:"DIN Pro"; src:url("../assets/fonts/DINPro-Medium.otf") format("opentype"); font-weight:500; font-style:normal; font-display:swap; }
-@font-face { font-family:"DIN Pro"; src:url("../assets/fonts/DINPro-Bold.otf") format("opentype"); font-weight:700; font-style:normal; font-display:swap; }
+@font-face { font-family:"DIN Pro"; src:url("../../assets/fonts/DINPro-Regular.otf") format("opentype"); font-weight:400; font-style:normal; font-display:swap; }
+@font-face { font-family:"DIN Pro"; src:url("../../assets/fonts/DINPro-Medium.otf") format("opentype"); font-weight:500; font-style:normal; font-display:swap; }
+@font-face { font-family:"DIN Pro"; src:url("../../assets/fonts/DINPro-Bold.otf") format("opentype"); font-weight:700; font-style:normal; font-display:swap; }
 
 :root {
   /* YÖKAK institutional palette */

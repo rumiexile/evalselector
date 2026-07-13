@@ -1,0 +1,32 @@
+<!-- @dsCard group="Colors" viewport="700x210" name="V3 secondary palette" subtitle="Extended accent set — data-viz & illustration only" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" href="../styles.css" />
+<style>
+  body { margin: 0; padding: 16px; background: var(--surface-page); font-family: var(--font-secondary); }
+  .ramp { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .sw { height: 74px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; justify-content: flex-end; padding: 7px; }
+  .sw span { font-size: 9px; letter-spacing: .03em; }
+  .name { font-weight: 500; }
+  .note { margin: 12px 2px 0; font-size: 10.5px; color: var(--text-faint); letter-spacing: .02em; }
+</style>
+</head>
+<body>
+<div class="ramp">
+  <div class="sw" style="background: var(--v3-435c); color: #2b2426;"><span class="name">435C</span><span>#c3b3b4</span></div>
+  <div class="sw" style="background: var(--v3-489c); color: #5a3b2c;"><span class="name">489C</span><span>#efcaba</span></div>
+  <div class="sw" style="background: var(--v3-623c); color: #24352f;"><span class="name">623C</span><span>#9bbbb0</span></div>
+  <div class="sw" style="background: var(--v3-625c); color: #fff;"><span class="name">625C</span><span>#568479</span></div>
+  <div class="sw" style="background: var(--v3-7440c); color: #fff;"><span class="name">7440C</span><span>#a47aaa</span></div>
+  <div class="sw" style="background: var(--v3-270c); color: #2c2c4a;"><span class="name">270C</span><span>#b5b5db</span></div>
+  <div class="sw" style="background: var(--v3-646c); color: #fff;"><span class="name">646C</span><span>#5281ab</span></div>
+  <div class="sw" style="background: var(--v3-7685c); color: #fff;"><span class="name">7685C</span><span>#22558a</span></div>
+  <div class="sw" style="background: var(--v3-285c); color: #fff;"><span class="name">285C</span><span>#0168b3</span></div>
+  <div class="sw" style="background: var(--v3-2915c); color: #123;"><span class="name">2915C</span><span>#51b0e0</span></div>
+  <div class="sw" style="background: var(--v3-warm-red); color: #fff;"><span class="name">Warm Red</span><span>#f0453e</span></div>
+</div>
+<p class="note">Accent-only — for charts, illustration and editorial imagery. Core UI stays on the three institutional blues. Categorical order: <code>--v3-cat-1…8</code>.</p>
+</body>
+</html>

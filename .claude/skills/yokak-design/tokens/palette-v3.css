@@ -1,0 +1,36 @@
+/* ============================================================
+   YÖKAK — V3 extended secondary palette
+   Source: "Yeni Nesil Logo Paketi" → V3_SC.jpg swatch sheet.
+   Accent-only palette for data visualisation, illustration and
+   editorial imagery. NOT for core UI chrome — the three
+   institutional blues (colors.css) remain primary.
+   Hex sampled directly from the supplied swatch artwork.
+   ============================================================ */
+:root {
+  /* Column 1 — the institutional blues, restated as V3 references */
+  --v3-7685c: #22558a;   /* dark blue  (= --yokak-blue-800 family) */
+  --v3-285c:  #0168b3;   /* mid blue   (= --yokak-blue-600 family) */
+  --v3-2915c: #51b0e0;   /* light blue (= --yokak-blue-300 family) */
+
+  /* Column 2 — warm / muted mid-tones */
+  --v3-435c:  #c3b3b4;   /* dusty mauve-grey */
+  --v3-489c:  #efcaba;   /* warm blush       */
+  --v3-623c:  #9bbbb0;   /* pale sage        */
+  --v3-625c:  #568479;   /* deep teal-green  */
+
+  /* Column 3 — violets, slate & signal red */
+  --v3-7440c: #a47aaa;   /* orchid violet    */
+  --v3-270c:  #b5b5db;   /* soft periwinkle  */
+  --v3-646c:  #5281ab;   /* slate blue       */
+  --v3-warm-red: #f0453e; /* PANTONE Warm Red C — signal / emphasis */
+
+  /* ---- Ordered categorical scale for charts ---- */
+  --v3-cat-1: var(--v3-285c);
+  --v3-cat-2: var(--v3-625c);
+  --v3-cat-3: var(--v3-7440c);
+  --v3-cat-4: var(--v3-489c);
+  --v3-cat-5: var(--v3-646c);
+  --v3-cat-6: var(--v3-623c);
+  --v3-cat-7: var(--v3-270c);
+  --v3-cat-8: var(--v3-warm-red);
+}
