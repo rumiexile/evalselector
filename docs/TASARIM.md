@@ -196,7 +196,7 @@ puanı 80'dir.
 | Asgari dil puanı (başkan + akademik) | 0; UKAP türlerinde 80 | Kullanıcı gereksinimi (UKAP dil düzeyi) |
 | İlk kez görev alacak üye: en az / en fazla | 1 / 2 | 8/8 (öğrenciler sayım dışı tutulur) |
 | Aynı üniversiteden en fazla bir üye | Açık | Coğrafi/alan dengesi (8/4) sadeleştirmesi |
-| Rol başına yedek sayısı | 1 | Kullanıcı gereksinimi |
+| Yedek havuzu — rol başına kişi | 1 | Türe bağlı ortak yedek havuzunun otomatik doldurma miktarı |
 
 "İlk kez görev alacak" tespiti: `TkBsk + AkdGor + IdrGor = 0`.
 
@@ -209,17 +209,29 @@ değerlendirmeler için ülke listesinden seçilir) ve tür. Eklenenler tarayıc
 saklanır; Türkiye dışındaki kurumlarda ülke adı listede ve takım kartında
 gösterilir. Bir kurum seçimden çıkarılırsa kurulmuş takımı da kaldırılır.
 
-### 9.3 Takım kurulumu ve değiştirme
+### 9.3 Takım kurulumu, yedek havuzu ve değiştirme
 
-- **Otomatik (rastlantısal)**: şablon kriterlerini ve ÇÇ kontrolünü geçen
-  adaylar arasından rastgele seçim yapılır (8/5'teki rastlantısal yöntem).
-  Kurulum sırası: başkan → akademik üyeler (önce ilk kez görev alacaklardan
-  asgari sayı) → idari → öğrenci → rol bazında yedekler.
-- **Elle**: "Boş takım" ile koltuklar tek tek seçilir; her koltuğun yanındaki
-  **Değiştir/Seç** düğmesi, uygun adayları (gerekçeli elenenler listesiyle
-  birlikte) gösteren seçim penceresini açar.
-- **Yedekler**: rol bazında tutulur; "Asil yap" ile terfi ettirilir (dolu
-  koltuktaki önceki asil aynı rolün yedeğine alınır), "Çıkar" ile silinir.
+Takımlar yalnızca **asil** kadrodan oluşur. Yedekler takım bazında değil,
+**değerlendirme türüne bağlı ortak bir yedek havuzunda** tutulur ve gerektiğinde
+"Değiştir" ile çağrılır.
+
+- **Otomatik (rastlantısal) asil kurulum**: şablon kriterlerini ve ÇÇ kontrolünü
+  geçen adaylar arasından rastgele seçim yapılır (8/5'teki rastlantısal yöntem).
+  Sıra: başkan → akademik üyeler (önce ilk kez görev alacaklardan asgari sayı) →
+  idari → öğrenci.
+- **Yedek havuzu**: her tür için ayrı tutulur (rol başına). "Havuzu oluştur/
+  güncelle" ile role uygun, henüz bağlı olmayan değerlendiricilerle şablondaki
+  sayı kadar rastlantısal doldurulur; elle "Ekle"/"Çıkar" ile düzenlenir. Havuz
+  tüm takımlarca paylaşılır (kuruma bağlı değildir; ÇÇ yalnızca takıma
+  yerleştirme anında uygulanır).
+- **Değiştir/Seç (takas)**: bir koltuğun yanındaki düğme, önce **o türün yedek
+  havuzundan** uygun kişileri, ardından **değerlendirici havuzundan** (henüz
+  bağlı olmayan) uygun adayları gruplu olarak gösterir. Seçim yapıldığında
+  seçilen kişi (havuzdaysa) havuzdan çıkar; koltuktaki önceki asil ise aynı
+  türün yedek havuzuna alınır (takas).
+- **Tek görev bütünlüğü**: bir kişi aynı anda ya bir takımın asili ya da bir
+  yedek havuzunun üyesidir; her seçim, tüm takımların asilleri + tüm yedek
+  havuzları kümesini dışlar.
 
 ### 9.4 Çıkar çatışması/çakışması (MADDE 9)
 
@@ -237,8 +249,8 @@ Her takım kartında canlı doğrulama gösterilir: boş koltuk, ÇÇ ihlali, ro
 kriteri ihlali, ilk kez görev aralığı, aynı üniversiteden birden fazla üye,
 dönem içinde birden fazla takımda asil görev. Dışa aktarma:
 
-- **Excel**: "Özet" (kurum başına durum ve uyarılar) + "Takımlar" (kişi
-  bazında rol, asil/yedek, kurum, dil puanı, ilk kez bilgisi).
+- **Excel**: "Özet" (kurum başına durum ve uyarılar) + "Takımlar" (asil kişiler,
+  rol/kurum/dil/ilk kez) + "Yedek Havuzu" (türe göre yedekler).
 - **Çalışma dosyası (JSON)**: dönem, şablonlar, kurum seçimi, takımlar ve ÇÇ
   beyanları; kaydet/yükle ile oturumlar arası taşınır.
 

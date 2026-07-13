@@ -174,26 +174,17 @@
   // Takım nesnesi: { kurum, turId, donem, sablon (anlık kopya),
   //                  asil: {baskan: tc|null, akademik: [tc], idari: tc|null, ogrenci: tc|null},
   //                  yedek: {baskan: [tc], akademik: [tc], idari: [tc], ogrenci: [tc]} }
+  // Yedekler artık takım bazında tutulmaz; değerlendirme türüne bağlı ortak
+  // yedek havuzunda (bkz. teams-ui.js) toplanır ve "Değiştir" ile çağrılır.
   function bosTakim(kurum, turId, donem, template) {
     return {
       kurum: kurum, turId: turId, donem: donem,
       sablon: JSON.parse(JSON.stringify(template)),
-      asil: { baskan: null, akademik: [], idari: null, ogrenci: null },
-      yedek: { baskan: [], akademik: [], idari: [], ogrenci: [] }
+      asil: { baskan: null, akademik: [], idari: null, ogrenci: null }
     };
   }
 
-  function takimTcleri(takim) {
-    var s = new Set();
-    if (takim.asil.baskan) s.add(takim.asil.baskan);
-    takim.asil.akademik.forEach(function (tc) { s.add(tc); });
-    if (takim.asil.idari) s.add(takim.asil.idari);
-    if (takim.asil.ogrenci) s.add(takim.asil.ogrenci);
-    ["baskan", "akademik", "idari", "ogrenci"].forEach(function (rol) {
-      takim.yedek[rol].forEach(function (tc) { s.add(tc); });
-    });
-    return s;
-  }
+  function takimTcleri(takim) { return asilTcleri(takim); }
 
   function asilTcleri(takim) {
     var s = new Set();
@@ -204,8 +195,8 @@
     return s;
   }
 
-  // Otomatik (rastlantısal) takım kurulumu.
-  // opts: { coiMap, atananlar:Set(dönemde başka takımlarda görevli asil+yedek tümü), rng }
+  // Otomatik (rastlantısal) takım kurulumu — yalnızca asil kadro kurulur.
+  // opts: { coiMap, atananlar:Set(dönemde görevli/yedek havuzunda bulunan tüm tc'ler), rng }
   // Dönen değer: { takim, uyarilar: [metin] }
   function autoAssign(pool, kurum, turId, donem, template, opts) {
     opts = opts || {};
@@ -272,18 +263,6 @@
       else uyarilar.push("Öğrenci değerlendirici için uygun aday bulunamadı.");
     }
 
-    // Yedekler (rol başına yedekSayisi)
-    ["baskan", "akademik", "idari", "ogrenci"].forEach(function (rol) {
-      if (rol === "idari" && !template.idariZorunlu) return;
-      if (rol === "ogrenci" && !template.ogrenciZorunlu) return;
-      var hedef = template.yedekSayisi * (rol === "akademik" ? Math.max(1, Math.ceil(template.akademikSayisi / 2)) : 1);
-      for (var k = 0; k < hedef; k++) {
-        var y = sec(rol);
-        if (!y) { if (k === 0) uyarilar.push(ROL_LABELS[rol] + " için yedek bulunamadı."); break; }
-        takim.yedek[rol].push(tcOf(y));
-      }
-    });
-
     return { takim: takim, uyarilar: uyarilar };
   }
 
@@ -330,22 +309,10 @@
       });
     });
 
-    // Yedekler de dönem içinde tek görev kuralına tabidir: başka takımlarda
-    // (asil ya da yedek) görevli bir kişi bu takıma yedek de olamaz.
-    ["baskan", "akademik", "idari", "ogrenci"].forEach(function (rol) {
-      (takim.yedek[rol] || []).forEach(function (tc) {
-        if (opts.digerTakimTcler && opts.digerTakimTcler.has(tc)) {
-          uyarilar.push(adEtiketi(rowOf(tc), tc) + " (" + ROL_LABELS[rol] +
-            " yedeği): bu dönemde başka bir takımda görevli (aynı anda tek görev alınabilir).");
-        }
-      });
-    });
-
-    // Aynı kişi bu takım içinde birden fazla koltukta (asil/yedek) olamaz
+    // Aynı kişi bu takımda birden fazla koltukta yer alamaz
     var sayim = {};
     [takim.asil.baskan, takim.asil.idari, takim.asil.ogrenci]
       .concat(takim.asil.akademik)
-      .concat(takim.yedek.baskan, takim.yedek.akademik, takim.yedek.idari, takim.yedek.ogrenci)
       .forEach(function (tc) { if (tc) sayim[tc] = (sayim[tc] || 0) + 1; });
     Object.keys(sayim).forEach(function (tc) {
       if (sayim[tc] > 1) {

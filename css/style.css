@@ -352,7 +352,17 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-fam
 .picker-arama { width: 100%; padding: 9px 11px; margin: 8px 0; border: 1px solid var(--line); border-radius: 6px; font: inherit; }
 .picker-liste { max-height: 320px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; }
 .picker-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+.picker-item:hover { background: var(--brand-tint); }
 .picker-item:last-child { border-bottom: 0; }
+.picker-grup {
+  padding: 6px 12px; font-size: 12px; font-weight: 700; letter-spacing: .3px;
+  text-transform: uppercase; color: var(--brand); background: var(--panel-2);
+  border-bottom: 1px solid var(--line); font-family: var(--font-data);
+  position: sticky; top: 0;
+}
+
+/* Yedek havuzu kartı — takım kartlarından ayrışması için altın vurgu */
+.havuz-card .team-head { border-left-color: var(--accent); }
 
 .coi-kutu { margin-top: 18px; }
 .coi-kutu select, .coi-kutu input { max-width: 280px; }

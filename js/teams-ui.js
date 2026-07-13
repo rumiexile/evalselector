@@ -16,7 +16,8 @@
     sablonlar: {},      // turId -> template
     seciliKurumlar: [], // [kurum adı]
     ekKurumlar: [],     // {ad, il, tur}
-    takimlar: {},       // kurum adı -> takım (Teams.bosTakim yapısı)
+    takimlar: {},       // kurum adı -> takım (Teams.bosTakim yapısı; yalnızca asil)
+    yedekHavuzu: {},    // turId -> { baskan:[tc], akademik:[tc], idari:[tc], ogrenci:[tc] }
     coi: {}             // tc -> [kurum adları]
   };
 
@@ -263,24 +264,73 @@
     });
   }
 
+  // ---------------- Yedek havuzu (türe göre) ----------------
+  var ROLLER = ["baskan", "akademik", "idari", "ogrenci"];
+
+  function havuzOf(turId) {
+    if (!T.yedekHavuzu[turId]) T.yedekHavuzu[turId] = { baskan: [], akademik: [], idari: [], ogrenci: [] };
+    return T.yedekHavuzu[turId];
+  }
+  function havuzTumTcler() {
+    var s = new Set();
+    Object.keys(T.yedekHavuzu).forEach(function (turId) {
+      ROLLER.forEach(function (rol) { (T.yedekHavuzu[turId][rol] || []).forEach(function (tc) { s.add(tc); }); });
+    });
+    return s;
+  }
+
   // ---------------- Takımlar ----------------
-  // Dönem içinde başka takımlarda görevli (asil VEYA yedek) tüm kişiler.
-  // Bir kişi aynı anda tek görev alabildiğinden bu küme her yeni seçimden dışlanır.
-  function atananlarSet(haricKurum) {
+  // Dönem içinde tek görev kuralı: bir kişi aynı anda tek yerde olabilir.
+  // "Bağlı" kişiler = tüm takımların asilleri + tüm yedek havuzlarındaki kişiler.
+  // Bu küme her yeni seçimden dışlanır. opts ile belirli bir bağlam hariç tutulur:
+  //   { haricKurum: takım asilini hariç tut, haricHavuz: {turId, rol} havuz kovasını hariç tut }
+  function bagliTcler(opts) {
+    opts = opts || {};
     var s = new Set();
     Object.keys(T.takimlar).forEach(function (kurum) {
-      if (kurum === haricKurum) return;
-      Teams.takimTcleri(T.takimlar[kurum]).forEach(function (tc) { s.add(tc); });
+      if (kurum === opts.haricKurum) return;
+      Teams.asilTcleri(T.takimlar[kurum]).forEach(function (tc) { s.add(tc); });
+    });
+    Object.keys(T.yedekHavuzu).forEach(function (turId) {
+      ROLLER.forEach(function (rol) {
+        if (opts.haricHavuz && opts.haricHavuz.turId === turId && opts.haricHavuz.rol === rol) return;
+        (T.yedekHavuzu[turId][rol] || []).forEach(function (tc) { s.add(tc); });
+      });
     });
     return s;
   }
 
   function autoBuild(kurum) {
     var sonuc = Teams.autoAssign(pool(), kurum, T.aktifTur, T.donem, template(), {
-      coiMap: T.coi, atananlar: atananlarSet(kurum)
+      coiMap: T.coi, atananlar: bagliTcler({ haricKurum: kurum })
     });
     T.takimlar[kurum] = sonuc.takim;
     return sonuc.uyarilar;
+  }
+
+  // ---------------- Yedek havuzu doldurma / düzenleme ----------------
+  // Aktif türün havuzunu, rol başına şablondaki yedekSayisi kadar uygun
+  // (bağlı olmayan) değerlendiriciyle rastlantısal olarak doldurur/tamamlar.
+  function autoFillHavuz() {
+    var turId = T.aktifTur, t = template(), hav = havuzOf(turId);
+    var eklenen = 0, eksik = [];
+    ROLLER.forEach(function (rol) {
+      if (rol === "idari" && !t.idariZorunlu) return;
+      if (rol === "ogrenci" && !t.ogrenciZorunlu) return;
+      var hedef = t.yedekSayisi * (rol === "akademik" ? Math.max(1, Math.ceil(t.akademikSayisi / 2)) : 1);
+      var eksikSayi = hedef - hav[rol].length;
+      for (var k = 0; k < eksikSayi; k++) {
+        // Havuz üyeleri bir kuruma bağlı değildir; ÇÇ ve aynı-kurum kuralları
+        // yalnızca "Değiştir" ile bir takıma yerleştirilirken uygulanır.
+        var ctx = { atananlar: bagliTcler(), takimTcler: new Set(hav[rol]) };
+        var uygun = Teams.uygunAdaylar(pool(), rol, "", t, ctx).uygun;
+        var karisik = Teams.shuffle(uygun);
+        if (!karisik.length) { eksik.push(Teams.ROL_LABELS[rol]); break; }
+        hav[rol].push(Teams.tcOf(karisik[0]));
+        eklenen++;
+      }
+    });
+    return { eklenen: eklenen, eksik: eksik };
   }
 
   function renderHavuzDurum() {
@@ -345,14 +395,20 @@
       (row["AkademikUnvan"] ? " · " + esc(row["AkademikUnvan"]) : "") + "</p>" +
       (rozet.length ? "<p>" + rozet.join(" ") + "</p>" : "");
 
-    // Hangi takım(lar)da, hangi rolde görevli
+    // Hangi takım(lar)da asil, hangi tür yedek havuzunda görevli
     var gorevler = [];
     Object.keys(T.takimlar).forEach(function (kurum) {
       var tk = T.takimlar[kurum];
       ["baskan", "akademik", "idari", "ogrenci"].forEach(function (rl) {
         var asil = rl === "akademik" ? tk.asil.akademik : (tk.asil[rl] ? [tk.asil[rl]] : []);
         if (asil.indexOf(tc) !== -1) gorevler.push(esc(kurum) + " — " + Teams.ROL_LABELS[rl] + " (asil)");
-        if ((tk.yedek[rl] || []).indexOf(tc) !== -1) gorevler.push(esc(kurum) + " — " + Teams.ROL_LABELS[rl] + " (yedek)");
+      });
+    });
+    Object.keys(T.yedekHavuzu).forEach(function (turId) {
+      ROLLER.forEach(function (rl) {
+        if ((T.yedekHavuzu[turId][rl] || []).indexOf(tc) !== -1) {
+          gorevler.push(esc(turAdi(turId)) + " — " + Teams.ROL_LABELS[rl] + " yedeği (havuz)");
+        }
       });
     });
     if (gorevler.length) {
@@ -394,12 +450,84 @@
     $("modal").hidden = false;
   }
 
+  // Aktif türün yedek havuzunu ekrana çizer.
+  function renderHavuz() {
+    var div = $("yedek-havuzu");
+    if (!div) return;
+    var turId = T.aktifTur, t = template(), hav = havuzOf(turId);
+    var roller = ["baskan", "akademik"];
+    if (t.idariZorunlu) roller.push("idari");
+    if (t.ogrenciZorunlu) roller.push("ogrenci");
+    var toplam = roller.reduce(function (n, rol) { return n + (hav[rol] || []).length; }, 0);
+
+    var head = '<div class="team-head"><div><strong>' + esc(turAdi(turId)) + " — Yedek Havuzu</strong>" +
+      ' <span class="hint">' + toplam + " kişi</span></div>" +
+      '<div class="team-actions">' +
+      '<button type="button" class="btn-mini" data-hav-oto>Havuzu oluştur/güncelle</button>' +
+      (toplam ? '<button type="button" class="btn-mini" data-hav-temizle>Temizle</button>' : "") +
+      "</div></div>";
+    var tbl = '<table class="slot-tablo"><tbody>';
+    roller.forEach(function (rol) {
+      var liste = hav[rol] || [];
+      tbl += '<tr><th>' + esc(Teams.ROL_LABELS[rol]) + " yedekleri</th><td>" +
+        (liste.length ? liste.map(function (tc) {
+          return '<div class="yedek-item">' + uyeChip(tc, rol, "", true, true) +
+            '<span class="yedek-btns"><button type="button" class="btn-mini" data-hsil-rol="' + rol +
+            '" data-hsil-tc="' + esc(tc) + '">Çıkar</button></span></div>';
+        }).join("") : '<span class="hint">—</span>') +
+        '</td><td class="slot-btn"><button type="button" class="btn-mini" data-hekle-rol="' + rol + '">Ekle</button></td></tr>';
+    });
+    tbl += "</tbody></table>";
+
+    var card = document.createElement("div");
+    card.className = "team-card havuz-card";
+    card.innerHTML = head + tbl +
+      '<div class="team-uyari"><span class="hint">Yedek havuzu değerlendirme türüne bağlıdır ve tüm takımlarca ' +
+      'paylaşılır. Bir üyeyi "Değiştir" ile çağırdığınızda havuzdan çıkar; yerine geçtiği asil havuza döner.</span></div>';
+
+    card.addEventListener("click", function (e) {
+      var b = e.target.closest("button");
+      if (!b) {
+        var u = e.target.closest(".uye[data-uye-tc]");
+        if (u) showUyeProfil(u.getAttribute("data-uye-tc"));
+        return;
+      }
+      if (b.hasAttribute("data-hav-oto")) {
+        if (!pool().length) { bildir("Havuz boş; önce başvuru dosyası yükleyiniz.", "err"); return; }
+        var r = autoFillHavuz();
+        renderTakimlar();
+        bildir(r.eklenen
+          ? r.eklenen + " kişi yedek havuzuna eklendi" + (r.eksik.length ? " (" + [...new Set(r.eksik)].join(", ") + " için uygun kalmadı)." : ".")
+          : "Eklenecek uygun kişi bulunamadı (havuz zaten dolu ya da uygun aday yok).", r.eklenen ? "ok" : "");
+      } else if (b.hasAttribute("data-hav-temizle")) {
+        if (confirm(turAdi(turId) + " yedek havuzu temizlenecek. Onaylıyor musunuz?")) {
+          T.yedekHavuzu[turId] = { baskan: [], akademik: [], idari: [], ogrenci: [] };
+          renderTakimlar();
+        }
+      } else if (b.dataset.hekleRol) {
+        if (!pool().length) { bildir("Havuz boş; önce başvuru dosyası yükleyiniz.", "err"); return; }
+        openPicker({ mod: "havuz", turId: turId, rol: b.dataset.hekleRol });
+      } else if (b.dataset.hsilRol) {
+        hav[b.dataset.hsilRol] = hav[b.dataset.hsilRol].filter(function (x) { return x !== b.dataset.hsilTc; });
+        renderTakimlar();
+      }
+    });
+    card.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      var u = e.target.closest(".uye[data-uye-tc]");
+      if (u) { e.preventDefault(); showUyeProfil(u.getAttribute("data-uye-tc")); }
+    });
+
+    div.innerHTML = "";
+    div.appendChild(card);
+  }
+
   function renderTakimlar() {
     var div = $("takim-listesi");
     div.innerHTML = "";
     if (!T.seciliKurumlar.length) {
       div.innerHTML = '<p class="hint">Takım kurmak için önce yukarıdan değerlendirilecek kurumları seçiniz.</p>';
-      renderHavuzDurum(); renderCoiAdaylar();
+      renderHavuzDurum(); renderHavuz(); renderCoiAdaylar();
       return;
     }
     var idx = poolIndex();
@@ -436,19 +564,6 @@
         if (s.idariZorunlu) satirlar.push(["idari", Teams.ROL_LABELS.idari, takim.asil.idari, -1]);
         if (s.ogrenciZorunlu) satirlar.push(["ogrenci", Teams.ROL_LABELS.ogrenci, takim.asil.ogrenci, -1]);
 
-        function yedekSatiri(rol) {
-          var yedekler = takim.yedek[rol] || [];
-          return '<tr class="yedek-satir"><th class="hint">' + esc(Teams.ROL_LABELS[rol]) + ' yedeği</th><td>' +
-            (yedekler.length ? yedekler.map(function (ytc) {
-              return '<div class="yedek-item">' + uyeChip(ytc, rol, kurum, true, true) +
-                '<span class="yedek-btns">' +
-                '<button type="button" class="btn-mini" data-yasil-rol="' + rol + '" data-yasil-tc="' + esc(ytc) + '">Asil yap</button>' +
-                '<button type="button" class="btn-mini" data-ysil-rol="' + rol + '" data-ysil-tc="' + esc(ytc) + '">Çıkar</button>' +
-                "</span></div>";
-            }).join("") : '<span class="hint">—</span>') +
-            '</td><td class="slot-btn"><button type="button" class="btn-mini" data-yekle-rol="' + rol + '">Yedek ekle</button></td></tr>';
-        }
-
         var tbl = '<table class="slot-tablo"><tbody>';
         satirlar.forEach(function (sat) {
           var rol = sat[0], etiket = sat[1], tc = sat[2], ai = sat[3];
@@ -457,16 +572,11 @@
             '</td><td class="slot-btn"><button type="button" class="btn-mini" data-slot-rol="' + rol +
             '" data-slot-ai="' + ai + '">' + (tc ? "Değiştir" : "Seç") + "</button></td></tr>";
         });
-        ["baskan", "akademik", "idari", "ogrenci"].forEach(function (rol) {
-          if (rol === "idari" && !s.idariZorunlu) return;
-          if (rol === "ogrenci" && !s.ogrenciZorunlu) return;
-          tbl += yedekSatiri(rol);
-        });
         tbl += "</tbody></table>";
         govde.innerHTML = tbl;
         card.appendChild(govde);
 
-        var uyarilar = Teams.validateTeam(takim, pool(), { coiMap: T.coi, digerTakimTcler: atananlarSet(kurum) });
+        var uyarilar = Teams.validateTeam(takim, pool(), { coiMap: T.coi, digerTakimTcler: bagliTcler({ haricKurum: kurum }) });
         var udiv = document.createElement("div");
         udiv.className = "team-uyari " + (uyarilar.length ? "" : "team-uygun");
         udiv.innerHTML = uyarilar.length
@@ -498,15 +608,7 @@
             renderTakimlar();
           }
         } else if (b.dataset.slotRol) {
-          openPicker(kurum, b.dataset.slotRol, parseInt(b.dataset.slotAi, 10), "asil");
-        } else if (b.dataset.yekleRol) {
-          openPicker(kurum, b.dataset.yekleRol, -1, "yedek");
-        } else if (b.dataset.yasilRol) {
-          yedegiAsilYap(kurum, b.dataset.yasilRol, b.dataset.yasilTc);
-        } else if (b.dataset.ysilRol) {
-          var tk = T.takimlar[kurum];
-          tk.yedek[b.dataset.ysilRol] = tk.yedek[b.dataset.ysilRol].filter(function (x) { return x !== b.dataset.ysilTc; });
-          renderTakimlar();
+          openPicker({ mod: "asil", kurum: kurum, rol: b.dataset.slotRol, akademikIdx: parseInt(b.dataset.slotAi, 10) });
         }
       });
 
@@ -520,101 +622,135 @@
       div.appendChild(card);
     });
     renderHavuzDurum();
+    renderHavuz();
     renderCoiAdaylar();
   }
 
-  function yedegiAsilYap(kurum, rol, tc) {
-    var tk = T.takimlar[kurum];
-    tk.yedek[rol] = tk.yedek[rol].filter(function (x) { return x !== tc; });
-    var eski = null;
-    if (rol === "baskan") { eski = tk.asil.baskan; tk.asil.baskan = tc; }
-    else if (rol === "idari") { eski = tk.asil.idari; tk.asil.idari = tc; }
-    else if (rol === "ogrenci") { eski = tk.asil.ogrenci; tk.asil.ogrenci = tc; }
-    else {
-      // ilk boş akademik koltuğa, yoksa son koltukla yer değiştir
-      var i = tk.asil.akademik.findIndex(function (x) { return !x; });
-      if (i === -1 && tk.asil.akademik.length < tk.sablon.akademikSayisi) tk.asil.akademik.push(tc);
-      else {
-        if (i === -1) i = tk.asil.akademik.length - 1;
-        eski = tk.asil.akademik[i];
-        tk.asil.akademik[i] = tc;
-      }
-    }
-    if (eski) tk.yedek[rol].push(eski);
-    renderTakimlar();
-    bildir(eski ? "Yedek üye asil yapıldı; önceki asil aynı rolün yedeğine alındı." : "Yedek üye asil olarak atandı.", "ok");
-  }
-
   // ---------------- Aday seçim penceresi ----------------
-  function openPicker(kurum, rol, akademikIdx, mod) {
-    var takim = T.takimlar[kurum];
-    var s = takim.sablon;
-    var kurumlar = [];
+  // opts:
+  //   { mod:"asil", kurum, rol, akademikIdx } — takım koltuğunu doldur/değiştir
+  //   { mod:"havuz", turId, rol }             — yedek havuzuna kişi ekle
+  function openPicker(opts) {
+    var mod = opts.mod, rol = opts.rol;
     var idx = poolIndex();
-    Teams.asilTcleri(takim).forEach(function (tc) {
-      if (idx[tc]) kurumlar.push(idx[tc]["Universite"]);
-    });
-    var ctx = {
-      coiMap: T.coi,
-      // Dönem içinde tek görev kuralı asil ve yedek seçiminin ikisinde de geçerli
-      atananlar: atananlarSet(kurum),
-      takimTcler: Teams.takimTcleri(takim),
-      takimKurumlari: mod === "asil" && s.ayniKurumTek ? kurumlar : null
-    };
-    var sonuc = Teams.uygunAdaylar(pool(), rol, kurum, s, ctx);
+    var gruplar = []; // { etiket, rows, kaynak:"yedek"|"havuz" }
+    var elenen = [];
+    var baslik, altyazi;
 
-    var html = "<h3>" + esc(kurum) + "</h3><p class='hint'>" +
-      esc(Teams.ROL_LABELS[rol]) + " — " + (mod === "asil" ? "asil üye seçimi" : "yedek ekleme") +
-      ". Liste, şablon kriterleri ve çıkar çatışması kontrolünden geçenleri gösterir.</p>" +
+    if (mod === "asil") {
+      var kurum = opts.kurum, takim = T.takimlar[kurum], s = takim.sablon, turId = takim.turId;
+      var takimKurumlari = [];
+      Teams.asilTcleri(takim).forEach(function (tc) { if (idx[tc]) takimKurumlari.push(idx[tc]["Universite"]); });
+      var kurumF = s.ayniKurumTek ? takimKurumlari : null;
+
+      // 1) Bu türün yedek havuzundan, bu takıma uygun olanlar
+      var yedekRows = (havuzOf(turId)[rol] || []).map(function (tc) { return idx[tc]; }).filter(Boolean);
+      var yedekSonuc = Teams.uygunAdaylar(yedekRows, rol, kurum, s, {
+        coiMap: T.coi, takimTcler: Teams.takimTcleri(takim), takimKurumlari: kurumF
+      });
+      if (yedekSonuc.uygun.length) gruplar.push({ etiket: "Yedek havuzundan", rows: yedekSonuc.uygun, kaynak: "yedek" });
+      elenen = elenen.concat(yedekSonuc.red.map(function (r) { return { row: r.row, sebep: "Yedek — " + r.sebep }; }));
+
+      // 2) Değerlendirici havuzundan (henüz hiçbir yere bağlı olmayanlar)
+      var freshSonuc = Teams.uygunAdaylar(pool(), rol, kurum, s, {
+        coiMap: T.coi, atananlar: bagliTcler({ haricKurum: kurum }),
+        takimTcler: Teams.takimTcleri(takim), takimKurumlari: kurumF
+      });
+      gruplar.push({ etiket: "Değerlendirici havuzundan (yeni)", rows: freshSonuc.uygun, kaynak: "havuz" });
+      elenen = elenen.concat(freshSonuc.red);
+
+      baslik = esc(kurum);
+      altyazi = esc(Teams.ROL_LABELS[rol]) + " — asil üye seçimi. Önce bu türün yedek havuzu, sonra " +
+        "değerlendirici havuzu gösterilir; her ikisi de şablon ve çıkar çatışması kontrolünden geçer.";
+    } else { // havuz
+      var hTurId = opts.turId, tmpl = template();
+      var hSonuc = Teams.uygunAdaylar(pool(), rol, "", tmpl, {
+        atananlar: bagliTcler(), takimTcler: new Set(havuzOf(hTurId)[rol])
+      });
+      gruplar.push({ etiket: "Uygun değerlendiriciler", rows: hSonuc.uygun, kaynak: "havuz-ekle" });
+      elenen = hSonuc.red;
+      baslik = esc(turAdi(hTurId)) + " — Yedek Havuzu";
+      altyazi = esc(Teams.ROL_LABELS[rol]) + " yedeği ekleme. Henüz hiçbir takımda ya da havuzda görevli " +
+        "olmayan, role uygun değerlendiriciler listelenir.";
+    }
+
+    var html = "<h3>" + baslik + "</h3><p class='hint'>" + altyazi + "</p>" +
       '<input type="search" id="picker-arama" placeholder="Ad veya üniversite ara…" class="picker-arama">' +
       '<div id="picker-liste" class="picker-liste"></div>';
-    if (sonuc.red.length) {
-      html += "<details><summary class='hint'>Elenen adaylar (" + sonuc.red.length + ")</summary><ul class='hint'>" +
-        sonuc.red.slice(0, 60).map(function (r) {
+    if (elenen.length) {
+      html += "<details><summary class='hint'>Elenen adaylar (" + elenen.length + ")</summary><ul class='hint'>" +
+        elenen.slice(0, 60).map(function (r) {
           return "<li>" + esc(((r.row["Ad"] || "") + " " + (r.row["Soyad"] || "")).trim()) + " — " + esc(r.sebep) + "</li>";
-        }).join("") + (sonuc.red.length > 60 ? "<li>…</li>" : "") + "</ul></details>";
+        }).join("") + (elenen.length > 60 ? "<li>…</li>" : "") + "</ul></details>";
     }
     $("modal-body").innerHTML = html;
     $("modal").hidden = false;
+
+    function sec(tc, kaynak) {
+      if (mod === "asil") {
+        yerlestirAsil(opts.kurum, opts.rol, opts.akademikIdx, tc, kaynak);
+      } else {
+        havuzOf(opts.turId)[rol].push(tc);
+        renderTakimlar();
+        bildir("Değerlendirici yedek havuzuna eklendi.", "ok");
+      }
+      $("modal").hidden = true;
+    }
 
     function listele() {
       var q = TextParse.norm($("picker-arama").value);
       var kutu = $("picker-liste");
       kutu.innerHTML = "";
-      var liste = sonuc.uygun.filter(function (r) {
-        if (!q) return true;
-        return TextParse.norm((r["Ad"] || "") + " " + (r["Soyad"] || "") + " " + (r["Universite"] || "")).indexOf(q) !== -1;
-      });
-      if (!liste.length) {
-        kutu.innerHTML = '<p class="hint">Uygun aday bulunamadı.</p>';
-        return;
-      }
-      liste.forEach(function (r) {
-        var tc = Teams.tcOf(r);
-        var item = document.createElement("div");
-        item.className = "picker-item";
-        item.innerHTML = uyeChip(tc, rol, kurum, false) +
-          '<button type="button" class="btn-mini">' + (mod === "asil" ? "Seç" : "Yedek ekle") + "</button>";
-        item.querySelector("button").addEventListener("click", function () {
-          if (mod === "asil") {
-            if (rol === "baskan") takim.asil.baskan = tc;
-            else if (rol === "idari") takim.asil.idari = tc;
-            else if (rol === "ogrenci") takim.asil.ogrenci = tc;
-            else {
-              if (akademikIdx >= 0 && akademikIdx < takim.asil.akademik.length) takim.asil.akademik[akademikIdx] = tc;
-              else takim.asil.akademik.push(tc);
-            }
-          } else {
-            takim.yedek[rol].push(tc);
-          }
-          $("modal").hidden = true;
-          renderTakimlar();
+      var toplam = 0;
+      gruplar.forEach(function (grup) {
+        var liste = grup.rows.filter(function (r) {
+          if (!q) return true;
+          return TextParse.norm((r["Ad"] || "") + " " + (r["Soyad"] || "") + " " + (r["Universite"] || "")).indexOf(q) !== -1;
         });
-        kutu.appendChild(item);
+        if (!liste.length) return;
+        toplam += liste.length;
+        var bas = document.createElement("div");
+        bas.className = "picker-grup";
+        bas.textContent = grup.etiket + " (" + liste.length + ")";
+        kutu.appendChild(bas);
+        liste.forEach(function (r) {
+          var tc = Teams.tcOf(r);
+          var item = document.createElement("div");
+          item.className = "picker-item";
+          item.innerHTML = uyeChip(tc, rol, mod === "asil" ? opts.kurum : "", false) +
+            '<button type="button" class="btn-mini">' + (mod === "asil" ? "Seç" : "Ekle") + "</button>";
+          item.querySelector("button").addEventListener("click", function () { sec(tc, grup.kaynak); });
+          kutu.appendChild(item);
+        });
       });
+      if (!toplam) kutu.innerHTML = '<p class="hint">Uygun aday bulunamadı.</p>';
     }
     $("picker-arama").addEventListener("input", listele);
     listele();
+  }
+
+  // Bir takım koltuğuna asil yerleştirir. Değiştirme mantığı (takas):
+  // - Seçilen kişi yedek havuzundan geldiyse havuzdan çıkarılır.
+  // - Koltuktaki önceki asil (varsa) bu türün yedek havuzuna (aynı rol) alınır.
+  function yerlestirAsil(kurum, rol, akademikIdx, tc, kaynak) {
+    var tk = T.takimlar[kurum], turId = tk.turId;
+    var eski = null;
+    if (rol === "baskan") { eski = tk.asil.baskan; tk.asil.baskan = tc; }
+    else if (rol === "idari") { eski = tk.asil.idari; tk.asil.idari = tc; }
+    else if (rol === "ogrenci") { eski = tk.asil.ogrenci; tk.asil.ogrenci = tc; }
+    else {
+      if (akademikIdx >= 0 && akademikIdx < tk.asil.akademik.length) { eski = tk.asil.akademik[akademikIdx]; tk.asil.akademik[akademikIdx] = tc; }
+      else tk.asil.akademik.push(tc);
+    }
+    // Seçilen kişi havuzdaysa çıkar (artık asil olarak görevli)
+    var hav = havuzOf(turId);
+    ROLLER.forEach(function (rl) { hav[rl] = hav[rl].filter(function (x) { return x !== tc; }); });
+    // Önceki asil, aynı türün aynı rol yedek havuzuna alınır (takas)
+    if (eski && eski !== tc) hav[rol].push(eski);
+    renderTakimlar();
+    bildir(eski && eski !== tc
+      ? (kaynak === "yedek" ? "Yedekten çağrıldı; önceki asil yedek havuzuna alındı." : "Üye değiştirildi; önceki asil yedek havuzuna alındı.")
+      : "Üye atandı.", "ok");
   }
 
   // ---------------- ÇÇ beyanları ----------------
@@ -689,14 +825,17 @@
   // ---------------- Dışa / içe aktarma ----------------
   function exportTeamsExcel() {
     var kurumlar = Object.keys(T.takimlar);
-    if (!kurumlar.length) { bildir("Dışa aktarılacak takım yok.", "err"); return; }
+    var havuzVar = Object.keys(T.yedekHavuzu).some(function (id) {
+      return ROLLER.some(function (rol) { return (T.yedekHavuzu[id][rol] || []).length; });
+    });
+    if (!kurumlar.length && !havuzVar) { bildir("Dışa aktarılacak takım ya da yedek havuzu yok.", "err"); return; }
     var idx = poolIndex();
-    var satirlar = [], ozet = [];
+    var satirlar = [], havuzSatir = [], ozet = [];
 
-    function kisiSatiri(kurum, takim, rol, tc, durum) {
+    function kisiSatiri(donem, turId, kurum, rol, tc, durum) {
       var r = idx[tc] || {};
       return {
-        "Dönem": takim.donem || T.donem, "Değerlendirme Türü": turAdi(takim.turId),
+        "Dönem": donem || T.donem, "Değerlendirme Türü": turAdi(turId),
         "Kurum": kurum, "Rol": Teams.ROL_LABELS[rol], "Asil/Yedek": durum,
         "TcNo": r["TcNo"] || tc, "Ad": r["Ad"] || "", "Soyad": r["Soyad"] || "",
         "Üniversitesi": r["Universite"] || "", "Unvan": r["AkademikUnvan"] || "",
@@ -708,14 +847,11 @@
 
     kurumlar.sort(function (a, b) { return a.localeCompare(b, "tr"); }).forEach(function (kurum) {
       var tk = T.takimlar[kurum];
-      if (tk.asil.baskan) satirlar.push(kisiSatiri(kurum, tk, "baskan", tk.asil.baskan, "Asil"));
-      tk.asil.akademik.forEach(function (tc) { if (tc) satirlar.push(kisiSatiri(kurum, tk, "akademik", tc, "Asil")); });
-      if (tk.asil.idari) satirlar.push(kisiSatiri(kurum, tk, "idari", tk.asil.idari, "Asil"));
-      if (tk.asil.ogrenci) satirlar.push(kisiSatiri(kurum, tk, "ogrenci", tk.asil.ogrenci, "Asil"));
-      ["baskan", "akademik", "idari", "ogrenci"].forEach(function (rol) {
-        (tk.yedek[rol] || []).forEach(function (tc) { satirlar.push(kisiSatiri(kurum, tk, rol, tc, "Yedek")); });
-      });
-      var uyarilar = Teams.validateTeam(tk, pool(), { coiMap: T.coi, digerTakimTcler: atananlarSet(kurum) });
+      if (tk.asil.baskan) satirlar.push(kisiSatiri(tk.donem, tk.turId, kurum, "baskan", tk.asil.baskan, "Asil"));
+      tk.asil.akademik.forEach(function (tc) { if (tc) satirlar.push(kisiSatiri(tk.donem, tk.turId, kurum, "akademik", tc, "Asil")); });
+      if (tk.asil.idari) satirlar.push(kisiSatiri(tk.donem, tk.turId, kurum, "idari", tk.asil.idari, "Asil"));
+      if (tk.asil.ogrenci) satirlar.push(kisiSatiri(tk.donem, tk.turId, kurum, "ogrenci", tk.asil.ogrenci, "Asil"));
+      var uyarilar = Teams.validateTeam(tk, pool(), { coiMap: T.coi, digerTakimTcler: bagliTcler({ haricKurum: kurum }) });
       ozet.push({
         "Kurum": kurum, "Değerlendirme Türü": turAdi(tk.turId), "Dönem": tk.donem || T.donem,
         "Takım Büyüklüğü (şablon)": Teams.takimBuyuklugu(tk.sablon),
@@ -724,19 +860,30 @@
       });
     });
 
+    // Yedek havuzları (türe göre)
+    Object.keys(T.yedekHavuzu).forEach(function (turId) {
+      ROLLER.forEach(function (rol) {
+        (T.yedekHavuzu[turId][rol] || []).forEach(function (tc) {
+          havuzSatir.push(kisiSatiri(T.donem, turId, "(Yedek Havuzu)", rol, tc, "Yedek (havuz)"));
+        });
+      });
+    });
+
     var wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ozet), "Özet");
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(satirlar), "Takımlar");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ozet.length ? ozet : [{ "Bilgi": "Takım yok" }]), "Özet");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(satirlar.length ? satirlar : [{ "Bilgi": "Takım yok" }]), "Takımlar");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(havuzSatir.length ? havuzSatir : [{ "Bilgi": "Yedek havuzu boş" }]), "Yedek Havuzu");
     var tarih = new Date().toISOString().slice(0, 10);
     XLSX.writeFile(wb, "degerlendirme-takimlari-" + tarih + ".xlsx");
   }
 
   function saveWork() {
     var veri = {
-      surum: 1, kayitTarihi: new Date().toISOString(),
+      surum: 2, kayitTarihi: new Date().toISOString(),
       donem: T.donem, aktifTur: T.aktifTur, customTurler: T.customTurler,
       sablonlar: T.sablonlar, seciliKurumlar: T.seciliKurumlar,
-      ekKurumlar: T.ekKurumlar, takimlar: T.takimlar, coi: T.coi
+      ekKurumlar: T.ekKurumlar, takimlar: T.takimlar,
+      yedekHavuzu: T.yedekHavuzu, coi: T.coi
     };
     var blob = new Blob([JSON.stringify(veri, null, 2)], { type: "application/json" });
     var a = document.createElement("a");
@@ -759,7 +906,22 @@
         if (Array.isArray(v.seciliKurumlar)) T.seciliKurumlar = v.seciliKurumlar;
         if (Array.isArray(v.ekKurumlar)) T.ekKurumlar = v.ekKurumlar;
         if (v.takimlar && typeof v.takimlar === "object") T.takimlar = v.takimlar;
+        if (v.yedekHavuzu && typeof v.yedekHavuzu === "object") T.yedekHavuzu = v.yedekHavuzu;
+        else T.yedekHavuzu = {};
         if (v.coi && typeof v.coi === "object") T.coi = v.coi;
+        // Eski sürüm (takım bazlı yedek): yedekleri türün yedek havuzuna taşı
+        Object.keys(T.takimlar).forEach(function (kurum) {
+          var tk = T.takimlar[kurum];
+          if (tk && tk.yedek) {
+            var hav = havuzOf(tk.turId);
+            ROLLER.forEach(function (rol) {
+              (tk.yedek[rol] || []).forEach(function (tc) {
+                if (hav[rol].indexOf(tc) === -1) hav[rol].push(tc);
+              });
+            });
+            delete tk.yedek;
+          }
+        });
         saveLS(); renderTur(); renderKurumlar(); renderTakimlar(); renderCoiKurumListesi();
         bildir("Çalışma yüklendi. Üye bilgilerinin görünmesi için ilgili başvuru dosyasının da yüklü olması gerekir.", "ok");
       } catch (e) {

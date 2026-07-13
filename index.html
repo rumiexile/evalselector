@@ -200,8 +200,8 @@
             <input type="number" id="s-min-yeni" min="0" max="5" step="1"></div>
           <div class="w-row"><label for="s-max-yeni">İlk kez görev alacak üye: en fazla</label>
             <input type="number" id="s-max-yeni" min="0" max="5" step="1"></div>
-          <div class="w-row"><label for="s-yedek">Rol başına yedek sayısı</label>
-            <input type="number" id="s-yedek" min="0" max="5" step="1"></div>
+          <div class="w-row"><label for="s-yedek">Yedek havuzu — rol başına kişi sayısı</label>
+            <input type="number" id="s-yedek" min="0" max="9" step="1"></div>
           <label class="chk"><input type="checkbox" id="s-ayni-kurum"> Aynı üniversiteden en fazla bir üye</label>
           <div class="panel-actions">
             <button id="btn-sablon-reset" type="button" class="btn btn-ghost">Şablonu öntanımlıya döndür</button>
@@ -260,6 +260,7 @@
         </label>
       </div>
 
+      <div id="yedek-havuzu"></div>
       <div id="takim-listesi"></div>
 
       <fieldset class="coi-kutu">

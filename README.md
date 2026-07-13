@@ -7,8 +7,9 @@
    eksik veriye sahip başvuruları raporlar.
 2. **Takım Oluşturma** — değerlendirme türüne (KAP, KAP — Ara Değerlendirme,
    UKAP, UKAP — İzleme, KDDP, KDDP — İzleme + kullanıcı tanımlı türler) göre şablon tabanlı
-   değerlendirme takımlarını **rastlantısal yöntemle** kurar; yedekleri,
-   çıkar çatışması kontrolünü ve üye değiştirmeyi destekler.
+   değerlendirme takımlarını (yalnızca asil) **rastlantısal yöntemle** kurar;
+   türe bağlı ortak **yedek havuzu**, çıkar çatışması kontrolü ve "Değiştir"
+   ile takas yoluyla üye değişimini destekler.
 
 ## Kullanım
 
@@ -29,12 +30,14 @@ Kurulum gerektirmez:
    değerlendirme türünü seçin (yeni tür tanımlanabilir).
 2. Takım şablonunu gözden geçirin: akademik üye sayısı, idari/öğrenci
    zorunluluğu, başkan görev kriteri, UKAP için asgari dil puanı, ilk kez
-   görev alacak üye aralığı, yedek sayısı.
+   görev alacak üye aralığı, yedek havuzu (rol başına kişi sayısı).
 3. Gömülü listeden değerlendirilecek üniversiteleri seçin (eksik kurumlar
    elle eklenebilir).
-4. **"Eksik takımları otomatik kur (rastlantısal)"** ile takımları kurun ya da
-   koltukları tek tek seçin; her üyenin yanındaki **Değiştir** düğmesi
-   yedekleri ve havuzdaki uygun adayları gösterir.
+4. **"Eksik takımları otomatik kur (rastlantısal)"** ile asil kadroları kurun.
+   Türe bağlı **Yedek Havuzu** kartında **"Havuzu oluştur/güncelle"** ile
+   yedekleri hazırlayın. Bir üyeyi **Değiştir** ile değiştirdiğinizde önce
+   yedek havuzundan, sonra değerlendirici havuzundan uygun adaylar sunulur;
+   yerine geçen kişi havuzdan çıkar, çıkan asil havuza döner (takas).
 5. Çıkar çatışması beyanlarını kaydedin; takım kartlarındaki canlı doğrulama
    uyarılarını giderin ve **"Takımları indir (Excel)"** ile raporu alın.
    Oturumlar arası devam için **"Çalışmayı kaydet (JSON)"** kullanın.
