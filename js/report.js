@@ -88,7 +88,10 @@
   function exportExcel(analiz, criteria) {
     var wb = buildWorkbook(analiz, criteria);
     var tarih = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(wb, "degerlendirici-analiz-raporu-" + tarih + ".xlsx");
+    var ad = "degerlendirici-analiz-raporu-" + tarih + ".xlsx";
+    // Sandbox-dostu indirme (varsa); yoksa doğrudan yazma
+    if (root.indirWorkbook) root.indirWorkbook(wb, ad);
+    else XLSX.writeFile(wb, ad);
   }
 
   root.Report = { buildWorkbook: buildWorkbook, exportExcel: exportExcel };

@@ -66,6 +66,55 @@
   }
   window.uiConfirm = uiConfirm;
 
+  // Sandbox-dostu indirme. Artifact gibi sandbox iframe'lerde indirme
+  // özniteliği (a.download) engellendiğinden, iframe içindeyken blob yeni
+  // sekmede açılır (indirme oradan gerçekleşir). Doğrudan açıldığında
+  // (kendi sunucu/masaüstü) normal indirme kullanılır.
+  function uiDownload(data, filename) {
+    var blob = data instanceof Blob ? data : new Blob([data], { type: "application/octet-stream" });
+    var url = URL.createObjectURL(blob);
+    var temizle = function () { setTimeout(function () { URL.revokeObjectURL(url); }, 120000); };
+    var iframede;
+    try { iframede = window.self !== window.top; } catch (e) { iframede = true; }
+
+    if (!iframede) {
+      var a = document.createElement("a");
+      a.href = url; a.download = filename; a.style.display = "none";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      temizle();
+      return true;
+    }
+    var w = window.open(url, "_blank");
+    if (w) { temizle(); return true; }
+    // Popup da engellendiyse: kullanıcıya elle indirme bağlantısı göster
+    downloadFallback(url, filename);
+    temizle();
+    return false;
+  }
+  window.uiDownload = uiDownload;
+
+  function downloadFallback(url, filename) {
+    var ov = document.createElement("div");
+    ov.className = "modal";
+    ov.innerHTML = '<div class="modal-box confirm-box" role="dialog" aria-modal="true">' +
+      '<p>Önizleme ortamı otomatik indirmeyi kısıtlıyor. Dosyayı indirmek için bağlantıya tıklayın:</p>' +
+      '<div class="confirm-actions">' +
+      '<a class="btn btn-primary" href="' + url + '" download="' + esc(filename) + '" target="_blank" rel="noopener">' + esc(filename) + '</a>' +
+      '<button type="button" class="btn btn-ghost">Kapat</button></div></div>';
+    document.body.appendChild(ov);
+    function kapat() { if (ov.parentNode) document.body.removeChild(ov); }
+    ov.querySelector("button").addEventListener("click", kapat);
+    ov.querySelector("a").addEventListener("click", function () { setTimeout(kapat, 600); });
+    ov.addEventListener("click", function (e) { if (e.target === ov) kapat(); });
+  }
+
+  // Bir SheetJS çalışma kitabını sandbox-dostu indirir.
+  function indirWorkbook(wb, filename) {
+    var out = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    uiDownload(new Blob([out], { type: "application/octet-stream" }), filename);
+  }
+  window.indirWorkbook = indirWorkbook;
+
   function esc(s) {
     return String(s === null || s === undefined ? "" : s)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -193,12 +242,7 @@
     });
 
     $("btn-export-criteria").addEventListener("click", function () {
-      var blob = new Blob([JSON.stringify(state.criteria, null, 2)], { type: "application/json" });
-      var a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "kriter-seti.json";
-      a.click();
-      URL.revokeObjectURL(a.href);
+      uiDownload(new Blob([JSON.stringify(state.criteria, null, 2)], { type: "application/octet-stream" }), "kriter-seti.json");
     });
 
     $("criteria-file").addEventListener("change", function (e) {
@@ -282,7 +326,7 @@
     ws2["!cols"] = [{ wch: 16 }, { wch: 62 }, { wch: 30 }];
     XLSX.utils.book_append_sheet(wb, ws2, "Açıklama");
 
-    XLSX.writeFile(wb, "degerlendirici-basvuru-sablonu.xlsx");
+    indirWorkbook(wb, "degerlendirici-basvuru-sablonu.xlsx");
     bildir("Boş başvuru şablonu indirildi (başlık satırı + Açıklama sayfası).", "ok");
   }
 

@@ -928,7 +928,9 @@
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(satirlar.length ? satirlar : [{ "Bilgi": "Takım yok" }]), "Takımlar");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(havuzSatir.length ? havuzSatir : [{ "Bilgi": "Yedek havuzu boş" }]), "Yedek Havuzu");
     var tarih = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(wb, "degerlendirme-takimlari-" + tarih + ".xlsx");
+    var ad = "degerlendirme-takimlari-" + tarih + ".xlsx";
+    if (window.indirWorkbook) window.indirWorkbook(wb, ad);
+    else XLSX.writeFile(wb, ad);
   }
 
   function saveWork() {
@@ -939,12 +941,10 @@
       ekKurumlar: T.ekKurumlar, takimlar: T.takimlar,
       yedekHavuzu: T.yedekHavuzu, coi: T.coi
     };
-    var blob = new Blob([JSON.stringify(veri, null, 2)], { type: "application/json" });
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "takim-calismasi-" + new Date().toISOString().slice(0, 10) + ".json";
-    a.click();
-    URL.revokeObjectURL(a.href);
+    var ad = "takim-calismasi-" + new Date().toISOString().slice(0, 10) + ".json";
+    var blob = new Blob([JSON.stringify(veri, null, 2)], { type: "application/octet-stream" });
+    if (window.uiDownload) window.uiDownload(blob, ad);
+    else { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = ad; a.click(); }
     bildir("Çalışma dosyası indirildi. Dosya kişisel veri (TcNo) içerir; güvenli saklayınız.", "ok");
   }
 
