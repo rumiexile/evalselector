@@ -156,6 +156,12 @@ legend {
 }
 .w-disabled { opacity: .55; }
 
+/* Uzun seçenek metinli açılır listeler (örn. Değerlendirme türü) tam genişlik,
+   etiketin altında ayrı satırda gösterilir. */
+.w-row.w-stack { flex-wrap: wrap; }
+.w-row.w-stack > label { flex: 1 0 100%; margin-bottom: 5px; }
+.w-row.w-stack > select { width: 100%; }
+
 .chk { display: block; margin: 8px 0; font-size: 14px; cursor: pointer; }
 .chk input { accent-color: var(--brand-2); }
 
