@@ -18,6 +18,54 @@
 
   function $(id) { return document.getElementById(id); }
 
+  // Uygulama-içi onay penceresi. window.confirm sandbox iframe'lerde (Artifact)
+  // engellendiğinden native confirm yerine bu kullanılır. Promise<boolean> döner.
+  function uiConfirm(mesaj, opts) {
+    opts = opts || {};
+    return new Promise(function (resolve) {
+      var ov = document.getElementById("confirm-modal");
+      if (!ov) {
+        ov = document.createElement("div");
+        ov.id = "confirm-modal";
+        ov.className = "modal";
+        ov.innerHTML = '<div class="modal-box confirm-box" role="alertdialog" aria-modal="true">' +
+          '<p id="confirm-msg"></p><div class="confirm-actions">' +
+          '<button type="button" id="confirm-cancel" class="btn btn-ghost"></button>' +
+          '<button type="button" id="confirm-ok" class="btn"></button></div></div>';
+        document.body.appendChild(ov);
+      }
+      var msg = ov.querySelector("#confirm-msg");
+      var ok = ov.querySelector("#confirm-ok");
+      var cancel = ov.querySelector("#confirm-cancel");
+      msg.textContent = mesaj;
+      ok.textContent = opts.onayEtiket || "Onayla";
+      cancel.textContent = opts.vazgecEtiket || "Vazgeç";
+      ok.className = "btn " + (opts.tehlike ? "btn-danger" : "btn-primary");
+      ov.hidden = false;
+      ok.focus();
+      function kapat(sonuc) {
+        ov.hidden = true;
+        ok.removeEventListener("click", onOk);
+        cancel.removeEventListener("click", onCancel);
+        ov.removeEventListener("click", onBackdrop);
+        document.removeEventListener("keydown", onKey, true);
+        resolve(sonuc);
+      }
+      function onOk() { kapat(true); }
+      function onCancel() { kapat(false); }
+      function onBackdrop(e) { if (e.target === ov) kapat(false); }
+      function onKey(e) {
+        if (e.key === "Escape") { e.preventDefault(); kapat(false); }
+        else if (e.key === "Enter") { e.preventDefault(); kapat(true); }
+      }
+      ok.addEventListener("click", onOk);
+      cancel.addEventListener("click", onCancel);
+      ov.addEventListener("click", onBackdrop);
+      document.addEventListener("keydown", onKey, true);
+    });
+  }
+  window.uiConfirm = uiConfirm;
+
   function esc(s) {
     return String(s === null || s === undefined ? "" : s)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -135,10 +183,13 @@
     num("s-bonus", function (v) { state.criteria.secim.havuzBonus = v; });
 
     $("btn-reset-criteria").addEventListener("click", function () {
-      if (!confirm("Tüm kriterler öntanımlı değerlere döndürülecek. Onaylıyor musunuz?")) return;
-      state.criteria = Criteria.cloneCriteria(Criteria.DEFAULT_CRITERIA);
-      renderCriteria();
-      criteriaChanged();
+      uiConfirm("Tüm kriterler öntanımlı değerlere döndürülecek. Onaylıyor musunuz?",
+        { onayEtiket: "Sıfırla" }).then(function (ok) {
+        if (!ok) return;
+        state.criteria = Criteria.cloneCriteria(Criteria.DEFAULT_CRITERIA);
+        renderCriteria();
+        criteriaChanged();
+      });
     });
 
     $("btn-export-criteria").addEventListener("click", function () {

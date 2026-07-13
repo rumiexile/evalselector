@@ -38,6 +38,10 @@
     clearTimeout(bildir._t);
     bildir._t = setTimeout(function () { div.className = "toast"; }, 6000);
   }
+  // Uygulama-içi onay (sandbox iframe'de native confirm engellenir); Promise<boolean>
+  function onay(mesaj, opts) {
+    return window.uiConfirm ? window.uiConfirm(mesaj, opts) : Promise.resolve(window.confirm(mesaj));
+  }
 
   // ---------------- Havuz erişimi ----------------
   function pool() {
@@ -502,10 +506,12 @@
           ? r.eklenen + " kişi yedek havuzuna eklendi" + (r.eksik.length ? " (" + [...new Set(r.eksik)].join(", ") + " için uygun kalmadı)." : ".")
           : "Eklenecek uygun kişi bulunamadı (havuz zaten dolu ya da uygun aday yok).", r.eklenen ? "ok" : "");
       } else if (b.hasAttribute("data-hav-temizle")) {
-        if (confirm(turAdi(turId) + " yedek havuzu temizlenecek. Onaylıyor musunuz?")) {
-          T.yedekHavuzu[turId] = { baskan: [], akademik: [], idari: [], ogrenci: [] };
-          renderTakimlar();
-        }
+        onay(turAdi(turId) + " yedek havuzu temizlenecek. Onaylıyor musunuz?", { tehlike: true, onayEtiket: "Temizle" })
+          .then(function (evet) {
+            if (!evet) return;
+            T.yedekHavuzu[turId] = { baskan: [], akademik: [], idari: [], ogrenci: [] };
+            renderTakimlar();
+          });
       } else if (b.dataset.hekleRol) {
         if (!pool().length) { bildir("Havuz boş; önce başvuru dosyası yükleyiniz.", "err"); return; }
         openPicker({ mod: "havuz", turId: turId, rol: b.dataset.hekleRol });
@@ -609,10 +615,12 @@
           T.takimlar[kurum] = Teams.bosTakim(kurum, T.aktifTur, T.donem, template());
           renderTakimlar();
         } else if (b.dataset.act === "sil") {
-          if (confirm("\"" + kurum + "\" takımı silinecek. Onaylıyor musunuz?")) {
-            delete T.takimlar[kurum];
-            renderTakimlar();
-          }
+          onay("\"" + kurum + "\" takımı silinecek. Onaylıyor musunuz?", { tehlike: true, onayEtiket: "Sil" })
+            .then(function (evet) {
+              if (!evet) return;
+              delete T.takimlar[kurum];
+              renderTakimlar();
+            });
         } else if (b.dataset.slotRol) {
           openPicker({ mod: "asil", kurum: kurum, rol: b.dataset.slotRol, akademikIdx: parseInt(b.dataset.slotAi, 10) });
         } else if (b.dataset.kaldirRol) {
@@ -770,11 +778,19 @@
     if (!tc) return;
     var row = poolIndex()[tc];
     var ad = row ? ((row["Ad"] || "") + " " + (row["Soyad"] || "")).trim() : "TcNo " + maskTc(tc);
-    if (!confirm("\"" + ad + "\" " + Teams.ROL_LABELS[rol] + " koltuğundan kaldırılacak ve koltuk boş kalacak. Onaylıyor musunuz?")) return;
-    if (rol === "akademik") tk.asil.akademik.splice(akademikIdx, 1);
-    else tk.asil[rol] = null;
-    renderTakimlar();
-    bildir("Üye kaldırıldı; koltuk boş bırakıldı. Eksiklik, takım kontrol panelinde bildirilir.", "");
+    onay("\"" + ad + "\" " + Teams.ROL_LABELS[rol] + " koltuğundan kaldırılacak ve koltuk boş kalacak. Onaylıyor musunuz?",
+      { tehlike: true, onayEtiket: "Kaldır" }).then(function (evet) {
+      if (!evet) return;
+      // Kaldırma anında dizideki konum değişmiş olabilir; tc'yi yeniden ara
+      if (rol === "akademik") {
+        var i = tk.asil.akademik.indexOf(tc);
+        if (i !== -1) tk.asil.akademik.splice(i, 1);
+      } else if (tk.asil[rol] === tc) {
+        tk.asil[rol] = null;
+      }
+      renderTakimlar();
+      bildir("Üye kaldırıldı; koltuk boş bırakıldı. Eksiklik, takım kontrol panelinde bildirilir.", "");
+    });
   }
 
   // ---------------- ÇÇ beyanları ----------------

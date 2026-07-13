@@ -367,7 +367,14 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-fam
 /* Koltuk düğmeleri (Değiştir + Kaldır yan yana) */
 .slot-btns { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
 .btn-kaldir { color: var(--err); border-color: var(--line); }
-.btn-kaldir:hover { background: var(--err-bg, #f8e3e2); border-color: var(--err); }
+.btn-kaldir:hover { background: #f8e3e2; border-color: var(--err); }
+
+/* Uygulama-içi onay penceresi */
+.confirm-box { max-width: 440px; }
+.confirm-box #confirm-msg { margin: 0 0 18px; font-size: 15px; line-height: 1.5; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.btn-danger { background: var(--err); border-color: var(--err); color: #fff; }
+.btn-danger:hover { filter: brightness(1.06); }
 
 .coi-kutu { margin-top: 18px; }
 .coi-kutu select, .coi-kutu input { max-width: 280px; }
