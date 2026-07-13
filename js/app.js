@@ -398,8 +398,115 @@
       ["22222222223","Ege Üniversitesi","Öğrenci","","","","Ceren","Acar","Sağlık Bilimleri","Tıp",0,0,0,"Öğrenci kalite topluluğu başkanı","IELTS 7","Lisans öğrencisi (5. sınıf)","Y"],
       ["23232323232","Gaziantep Üniversitesi","Öğrenci","","","","Umut","Sarı","Mühendislik","Endüstri Mühendisliği",0,0,0,"","YDS 66","Lisans öğrencisi (3. sınıf)","Y"]
     ];
-    ingest([H].concat(D), "ornek-veri (uygulama içi)");
-    bildir("Örnek veri yüklendi. Bu veri gerçek kişileri temsil etmez; yalnızca deneme amaçlıdır.", "ok");
+
+    // Kalan satırlar deterministik olarak üretilir (toplam 300 kayıt).
+    D = D.concat(ornekUret(300 - D.length, D.length));
+    ingest([H].concat(D), "ornek-veri (uygulama içi, 300 kayıt)");
+    bildir("Örnek veri yüklendi: 300 kayıt. Bu veri gerçek kişileri temsil etmez; yalnızca deneme amaçlıdır.", "ok");
+  }
+
+  // Deterministik sözde-rastgele örnek başvuru üreteci (H sütun sırasına uygun satırlar)
+  function ornekUret(adet, tcOffset) {
+    var seed = 20260713;
+    function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x80000000; }
+    function pick(a) { return a[Math.floor(rnd() * a.length)]; }
+    function ri(a, b) { return a + Math.floor(rnd() * (b - a + 1)); }
+    function sans(p) { return rnd() < p; }
+
+    var adlar = ["Ahmet","Mehmet","Mustafa","Ali","Hüseyin","Hasan","İbrahim","Osman","Yusuf","Murat",
+      "Ömer","Emre","Burak","Kemal","Serkan","Okan","Hakan","Umut","Kaan","Onur","Volkan","Cem","Barış",
+      "Furkan","Selim","Erdem","Tolga","Uğur","Sinan","Levent","Ayşe","Fatma","Emine","Zeynep","Elif",
+      "Meryem","Hatice","Merve","Selin","Pınar","Gülay","Nurcan","Ceren","Aslı","Büşra","Ebru","Derya",
+      "Nesrin","Şeyma","Tuğba","Yasemin","Gamze","Esra","Melis","Dilek","Sibel","Nilüfer","Handan","Gizem"];
+    var soyadlar = ["Yılmaz","Kaya","Demir","Şahin","Çelik","Yıldız","Yıldırım","Öztürk","Aydın","Arslan",
+      "Doğan","Kılıç","Aslan","Çetin","Kara","Koç","Kurt","Özdemir","Şimşek","Aksoy","Polat","Erdoğan",
+      "Güneş","Aydın","Bulut","Korkmaz","Güler","Yavuz","Can","Acar","Bozkurt","Taş","Uçar","Karadağ",
+      "Ekinci","Sarı","Turan","Avcı","Baştürk","Tekin","Kaplan","Yalçın","Duman","Çakır"];
+    var unis = (window.Universities && Universities.UNIVERSITIES || []).map(function (u) { return u.ad; });
+    if (!unis.length) unis = ["Ankara Üniversitesi","Ege Üniversitesi","Gazi Üniversitesi","Hacettepe Üniversitesi","İstanbul Üniversitesi"];
+    var temelAlanlar = ["Eğitim Bilimleri","Fen Bilimleri ve Matematik","Filoloji","Güzel Sanatlar","Hukuk",
+      "İlahiyat","Mimarlık, Planlama ve Tasarım","Mühendislik","Sağlık Bilimleri","Sosyal, Beşeri ve İdari Bilimler",
+      "Spor Bilimleri","Ziraat, Orman ve Su Ürünleri"];
+    var bilim = {
+      "Eğitim Bilimleri": ["Eğitim Yönetimi","Ölçme ve Değerlendirme","Rehberlik ve Psikolojik Danışmanlık","Sınıf Eğitimi"],
+      "Fen Bilimleri ve Matematik": ["Matematik","Fizik","Kimya","Biyoloji","İstatistik"],
+      "Filoloji": ["İngiliz Dili ve Edebiyatı","Türk Dili ve Edebiyatı","Dilbilim"],
+      "Güzel Sanatlar": ["Resim","Müzik","Grafik Tasarım"],
+      "Hukuk": ["Kamu Hukuku","Özel Hukuk"],
+      "İlahiyat": ["Temel İslam Bilimleri","Din Kültürü ve Ahlak Bilgisi"],
+      "Mimarlık, Planlama ve Tasarım": ["Mimarlık","Şehir ve Bölge Planlama","İç Mimarlık"],
+      "Mühendislik": ["Bilgisayar Mühendisliği","İnşaat Mühendisliği","Makine Mühendisliği","Elektrik-Elektronik Mühendisliği","Endüstri Mühendisliği"],
+      "Sağlık Bilimleri": ["Tıp","Hemşirelik","Eczacılık","Diş Hekimliği","Fizyoterapi ve Rehabilitasyon"],
+      "Sosyal, Beşeri ve İdari Bilimler": ["İşletme","İktisat","Kamu Yönetimi","Psikoloji","Sosyoloji"],
+      "Spor Bilimleri": ["Antrenörlük Eğitimi","Beden Eğitimi ve Spor"],
+      "Ziraat, Orman ve Su Ürünleri": ["Tarla Bitkileri","Orman Mühendisliği","Su Ürünleri"]
+    };
+    var akademikGorevler = ["","","","","Bölüm Başkanı","Anabilim Dalı Başkanı","Dekan Yardımcısı","Dekan",
+      "Enstitü Müdürü","MYO/Yüksekokul Müdürü","Bölüm Başkan Yardımcısı","Bologna Koordinatörü","Erasmus Koordinatörü",
+      "Araştırma ve Uygulama Merkezi Müdürü","Rektör Yardımcısı"];
+    var idariGorevler = ["Genel Sekreter","Strateji Geliştirme Daire Başkanı","Öğrenci İşleri Daire Başkanı",
+      "Kalite Koordinatörlüğü Şube Müdürü","Personel Daire Başkanı","Bilgi İşlem Daire Başkanı","Yazı İşleri Müdürü"];
+    var tecrubeParca = ["YÖKAK dış değerlendirme","kurumsal akreditasyon süreçleri","kalite komisyonu üyeliği",
+      "MÜDEK program akreditasyonu değerlendiriciliği","KİDR hazırlama","iç tetkik","öz değerlendirme raporu",
+      "ISO 9001 baş denetçi","Bologna ve AKTS süreçleri","program değerlendirme komisyonu","değerlendirici eğitimi",
+      "takım üyeliği"];
+    var dilSinav = ["YDS","YÖKDİL","KPDS","e-YDS"];
+
+    function tecrubeUret(n) {
+      if (!n) return "";
+      var set = {};
+      for (var i = 0; i < n; i++) set[pick(tecrubeParca)] = 1;
+      return Object.keys(set).join(", ");
+    }
+    function dilUret(zorunlu) {
+      if (!zorunlu && sans(0.15)) return "";
+      if (sans(0.12)) return sans(0.5) ? "TOEFL iBT " + ri(72, 110) : "IELTS " + (ri(60, 85) / 10).toFixed(1).replace(".", ",");
+      return pick(dilSinav) + " " + (ri(550, 980) / 10).toFixed(1).replace(".0", "").replace(".", ",");
+    }
+
+    var rows = [];
+    for (var i = 0; i < adet; i++) {
+      var tc = String(30000000000 + (tcOffset + i) * 137);
+      var uni = pick(unis);
+      var ad = pick(adlar), soyad = pick(soyadlar);
+      var secim = sans(0.45) ? "E" : "Y";
+      var tip = (i % 11 === 0) ? "Öğrenci" : (i % 6 === 0) ? "İdari" : "Akademik";
+      var row;
+      if (tip === "İdari") {
+        var idrGor = ri(0, 4);
+        row = [tc, uni, "İdari", "", "", pick(idariGorevler), ad, soyad, "", "",
+               0, sans(0.3) ? ri(1, 3) : 0, idrGor,
+               tecrubeUret(idrGor >= 2 ? ri(1, 3) : ri(0, 1)),
+               dilUret(false), sans(0.5) ? "Yüksek Lisans " + ri(2005, 2018) : "Lisans " + ri(1995, 2012), secim];
+      } else if (tip === "Öğrenci") {
+        var alanO = pick(temelAlanlar);
+        row = [tc, uni, "Öğrenci", "", "", "", ad, soyad, alanO, pick(bilim[alanO]),
+               0, sans(0.25) ? 1 : 0, 0,
+               sans(0.5) ? tecrubeUret(1) : "", dilUret(false),
+               "Lisans öğrencisi (" + ri(2, 6) + ". sınıf)", secim];
+      } else {
+        var unvan = (function () {
+          var r = rnd();
+          return r < 0.25 ? "Prof. Dr." : r < 0.5 ? "Doç. Dr." : r < 0.75 ? "Dr. Öğr. Üyesi" : r < 0.9 ? "Öğr. Gör." : "Arş. Gör.";
+        })();
+        var alan = pick(temelAlanlar);
+        var tk = 0, ak = 0;
+        if (unvan === "Prof. Dr.") { tk = ri(0, 5); ak = ri(1, 8); }
+        else if (unvan === "Doç. Dr.") { tk = ri(0, 2); ak = ri(0, 5); }
+        else if (unvan === "Dr. Öğr. Üyesi") { tk = 0; ak = ri(0, 2); }
+        var gorevSay = tk + ak;
+        var ogr;
+        if (unvan === "Prof. Dr." || unvan === "Doç. Dr." || unvan === "Dr. Öğr. Üyesi") {
+          var dy = ri(1992, 2021); ogr = "Lisans " + (dy - ri(6, 10)) + ", Doktora " + dy;
+        } else if (unvan === "Öğr. Gör.") ogr = "Yüksek Lisans " + ri(2008, 2020);
+        else ogr = "Lisans " + ri(2015, 2021) + ", Yüksek Lisans " + ri(2021, 2024);
+        row = [tc, uni, "Akademik", pick(akademikGorevler), unvan, "", ad, soyad, alan, pick(bilim[alan]),
+               tk, ak, 0, tecrubeUret(gorevSay >= 3 ? ri(2, 3) : gorevSay >= 1 ? ri(1, 2) : (sans(0.4) ? 1 : 0)),
+               dilUret(false), ogr, secim];
+      }
+      rows.push(row);
+    }
+    return rows;
   }
 
   // ---------------- Genel ----------------
