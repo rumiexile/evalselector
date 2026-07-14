@@ -44,8 +44,10 @@
       ok.textContent = opts.onayEtiket || "Onayla";
       cancel.textContent = opts.vazgecEtiket || "Vazgeç";
       ok.className = "btn " + (opts.tehlike ? "btn-danger" : "btn-primary");
-      if (opts.ekstraEtiket) { extra.textContent = opts.ekstraEtiket; extra.hidden = false; }
-      else { extra.hidden = true; }
+      // Not: .btn { display:inline-flex } UA'nın [hidden] kuralını ezdiğinden
+      // gizlemek için doğrudan style.display kullanılır.
+      if (opts.ekstraEtiket) { extra.textContent = opts.ekstraEtiket; extra.style.display = ""; }
+      else { extra.textContent = ""; extra.style.display = "none"; }
       ov.hidden = false;
       ok.focus();
       function kapat(sonuc) {
