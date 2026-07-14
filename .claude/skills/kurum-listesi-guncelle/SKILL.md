@@ -1,22 +1,24 @@
 ---
 name: kurum-listesi-guncelle
-description: Değerlendirilecek kurumlar listesini YÖK Akademik'in üniversite listesinden (universityListview.jsp) yeniden üretir. Kullanıcı "kurum listesini güncelle", "üniversite listesini YÖK'ten çek/yenile" gibi bir istekte bulununca kullan.
+description: Değerlendirilecek kurumlar listesini resmî kaynaklardan (YÖKAK MIS Common/Universities ya da YÖK Akademik universityListview.jsp) yeniden üretir. Kullanıcı "kurum listesini güncelle", "üniversite listesini YÖK'ten/MIS'ten çek/yenile" gibi bir istekte bulununca kullan.
 ---
 
 # Kurum listesini YÖK'ten güncelleme
 
 Uygulamanın "Değerlendirilecek Kurumlar" sekmesindeki liste `js/universities.js`
 içindeki gömülü `EMBEDDED` dizisinden gelir. Bu beceri, listeyi resmî kaynaktan
-yeniden üretir:
+yeniden üretir. Kaynaklar sırayla denenir (`Universities.KAYNAKLAR`):
 
-Kaynak: https://akademik.yok.gov.tr/AkademikArama/view/universityListview.jsp
+1. https://mis.yokak.gov.tr/Common/Universities (YÖKAK MIS; HTML ya da JSON —
+   ayrıştırıcı ikisini de işler)
+2. https://akademik.yok.gov.tr/AkademikArama/view/universityListview.jsp
 
 ## Adımlar
 
 1. **Sayfayı edin.** Sırasıyla dene; ilk başarılı olanla devam et:
-   - `node tools/update-universities.js --dry-run` — betik sayfayı kendisi
-     indirmeyi dener ve farkları gösterir.
-   - Betik indiremezse (akademik.yok.gov.tr yurt dışı/veri merkezi IP'lerini
+   - `node tools/update-universities.js --dry-run` — betik kaynakları sırayla
+     kendisi indirmeyi dener ve farkları gösterir.
+   - Betik indiremezse (YÖK/YÖKAK sunucuları yurt dışı/veri merkezi IP'lerini
      ve tanımadığı istemcileri 403 ile engelleyebilir) `WebFetch` ya da varsa
      bir MCP fetch aracıyla sayfayı almayı dene; içeriği bir dosyaya yazıp
      `--in` ile ver.

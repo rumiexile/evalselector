@@ -228,14 +228,17 @@ değerlendirmeler için ülke listesinden seçilir) ve tür. Eklenenler tarayıc
 saklanır; Türkiye dışındaki kurumlarda ülke adı listede ve takım kartında
 gösterilir. Bir kurum seçimden çıkarılırsa kurulmuş takımı da kaldırılır.
 
-Gömülü liste **YÖK Akademik üniversite listesinden** güncellenebilir
-(`universityListview.jsp`). İki yol vardır; ikisi de `Universities.parse`
-ayrıştırıcısını kullanır (tablo satırları → bağlantı metinleri → düz metin
-sırasıyla denenir; bilinen kurumların özenli yazımı korunur, yeni adlar Türkçe
-başlık düzenine çevrilir, il/tür doğrulanamayanlar "Diğer"/"—" işaretlenir):
+Gömülü liste resmî kaynaklardan güncellenebilir; kaynaklar sırayla denenir
+(`Universities.KAYNAKLAR`): **YÖKAK MIS** (`mis.yokak.gov.tr/Common/Universities`)
+ve **YÖK Akademik** (`universityListview.jsp`). İki yol vardır; ikisi de
+`Universities.parse` ayrıştırıcısını kullanır (JSON → tablo satırları →
+bağlantı metinleri → düz metin sırasıyla denenir; bilinen kurumların özenli
+yazımı korunur, yeni adlar Türkçe başlık düzenine çevrilir, il/tür
+doğrulanamayanlar "Diğer"/"—" işaretlenir):
 
-- **Arayüzden** ("YÖK listesinden güncelle"): sayfa doğrudan indirilmeye
-  çalışılır (YÖK CORS'a izin vermezse engellenir); olmazsa kaydedilmiş sayfa
+- **Arayüzden** ("YÖK listesinden güncelle"): her kaynak önce doğrudan, sonra
+  herkese açık CORS aracıları (allorigins, corsproxy, r.jina.ai) üzerinden
+  indirilmeye çalışılır; olmazsa kaydedilmiş sayfa
   yüklenir ya da içerik yapıştırılır. Fark önizlemesi (eklenen/çıkan, eksik
   bilgi, seçili olup listeden düşenler) onaylanınca liste `localStorage`'a
   yazılır ve o tarayıcıda gömülü listenin yerine geçer; "Gömülü listeye dön"

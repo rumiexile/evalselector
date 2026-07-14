@@ -33,9 +33,11 @@ Kurulum gerektirmez:
    görev alacak üye aralığı, yedek havuzu (rol başına kişi sayısı).
 3. Kurum listesinden değerlendirilecek üniversiteleri seçin (eksik kurumlar
    elle eklenebilir). Liste gömülü kopyayla gelir; **"YÖK listesinden
-   güncelle"** ile [YÖK Akademik üniversite listesinden](https://akademik.yok.gov.tr/AkademikArama/view/universityListview.jsp)
-   yenilenebilir (sayfa doğrudan indirilemezse kaydedilmiş sayfa yüklenir ya
-   da içerik yapıştırılır; güncel liste tarayıcıda saklanır).
+   güncelle"** ile [YÖKAK MIS](https://mis.yokak.gov.tr/Common/Universities)
+   ya da [YÖK Akademik](https://akademik.yok.gov.tr/AkademikArama/view/universityListview.jsp)
+   listesinden yenilenebilir (doğrudan ve CORS aracılı indirme sırayla
+   denenir; olmazsa kaydedilmiş sayfa yüklenir ya da içerik yapıştırılır;
+   güncel liste tarayıcıda saklanır).
 4. **"Eksik takımları otomatik kur (rastlantısal)"** ile asil kadroları kurun.
    Türe bağlı **Yedek Havuzu** kartında **"Havuzu oluştur/güncelle"** ile
    yedekleri hazırlayın. Bir üyeyi **Değiştir** ile değiştirdiğinizde önce

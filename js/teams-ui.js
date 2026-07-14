@@ -324,8 +324,9 @@
       '<div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="kg-baslik">' +
       '<button type="button" class="modal-close" id="kg-kapat" aria-label="Kapat">×</button>' +
       '<h3 id="kg-baslik">Kurum listesini YÖK’ten güncelle</h3>' +
-      '<p class="hint">Kaynak: <a href="' + esc(Universities.KAYNAK_URL) +
-      '" target="_blank" rel="noopener">akademik.yok.gov.tr — üniversite listesi</a></p>' +
+      '<p class="hint">Kaynaklar: ' + Universities.KAYNAKLAR.map(function (k) {
+        return '<a href="' + esc(k.url) + '" target="_blank" rel="noopener">' + esc(k.ad) + "</a>";
+      }).join(" · ") + "</p>" +
       '<div class="panel-actions">' +
       '<button type="button" id="kg-indir" class="btn btn-ghost">Sayfayı doğrudan indir</button>' +
       '<label class="btn btn-ghost btn-file">Kayıtlı sayfayı yükle (.html)' +
@@ -384,15 +385,25 @@
       ov.querySelector("#kg-uygula").disabled = false;
     }
 
-    // YÖK CORS başlığı göndermediğinden doğrudan istek çoğu tarayıcıda engellenir;
-    // sırasıyla herkese açık CORS aracıları denenir (yalnızca herkese açık liste
+    // Sunucular CORS başlığı göndermediğinde doğrudan istek engellenir; her
+    // kaynak (MIS, YÖK Akademik) önce doğrudan, sonra herkese açık CORS
+    // aracıları üzerinden denenir (aracıya yalnızca herkese açık liste
     // sayfasının adresi iletilir, kişisel veri gönderilmez). İlk başaran kazanır.
-    var INDIRME_YOLLARI = [
-      { ad: "doğrudan bağlantı", url: function (u) { return u; } },
-      { ad: "allorigins aracısı", url: function (u) { return "https://api.allorigins.win/raw?url=" + encodeURIComponent(u); } },
-      { ad: "corsproxy aracısı", url: function (u) { return "https://corsproxy.io/?url=" + encodeURIComponent(u); } },
-      { ad: "jina okuyucu aracısı", url: function (u) { return "https://r.jina.ai/" + u; } }
+    var ARACILAR = [
+      { ad: "doğrudan", sar: function (u) { return u; } },
+      { ad: "allorigins", sar: function (u) { return "https://api.allorigins.win/raw?url=" + encodeURIComponent(u); } },
+      { ad: "corsproxy", sar: function (u) { return "https://corsproxy.io/?url=" + encodeURIComponent(u); } },
+      { ad: "jina okuyucu", sar: function (u) { return "https://r.jina.ai/" + u; } }
     ];
+    var INDIRME_YOLLARI = [];
+    ARACILAR.forEach(function (araci) {
+      Universities.KAYNAKLAR.forEach(function (kaynak) {
+        INDIRME_YOLLARI.push({
+          ad: kaynak.ad + " (" + araci.ad + ")",
+          url: function () { return araci.sar(kaynak.url); }
+        });
+      });
+    });
 
     function zamanAsimliFetch(url, ms) {
       if (typeof AbortController === "undefined") return fetch(url, { mode: "cors" });
@@ -421,7 +432,7 @@
         var yol = INDIRME_YOLLARI[i];
         kutu.innerHTML = '<p class="hint">İndiriliyor (' + esc(yol.ad) + ", " +
           (i + 1) + "/" + INDIRME_YOLLARI.length + ")…</p>";
-        zamanAsimliFetch(yol.url(Universities.KAYNAK_URL), 12000)
+        zamanAsimliFetch(yol.url(), 12000)
           .then(function (res) {
             if (!res.ok) throw new Error("HTTP " + res.status);
             return res.text();

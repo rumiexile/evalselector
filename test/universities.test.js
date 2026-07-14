@@ -117,6 +117,29 @@ const duzMetin = [
   check("entity: Ç/İ çözüldü", cukurova && cukurova.ad === "Çukurova Üniversitesi", s.kurumlar[0]);
 }
 
+// ---- JSON uç noktası (ör. MIS Common/Universities) ----
+{
+  const json = JSON.stringify({
+    data: [
+      { id: 1, name: "ANKARA ÜNİVERSİTESİ", city: "ANKARA", type: "Devlet Üniversitesi" },
+      { id: 2, name: "KOÇ ÜNİVERSİTESİ", city: "İSTANBUL", type: "Vakıf Üniversitesi" },
+      { id: 3, name: "İZMİR YÜKSEK TEKNOLOJİ ENSTİTÜSÜ", city: "İZMİR", type: "DEVLET" },
+      { id: 4, name: "YEPYENİ TEKNOLOJİ ÜNİVERSİTESİ", city: "KONYA", type: "VAKIF" },
+      { id: 5, name: "EGE ÜNİVERSİTESİ", city: "İZMİR", type: "Devlet" }
+    ]
+  });
+  const s = Uni.parse(json);
+  check("json: 5 kurum", s.kurumlar.length === 5, s.kurumlar.map((k) => k.ad));
+  const ank = bul(s.kurumlar, "ANKARA ÜNİVERSİTESİ");
+  check("json: 'Devlet Üniversitesi' türü eşlendi", ank && ank.tur === "Devlet", ank);
+  const koc = bul(s.kurumlar, "KOÇ ÜNİVERSİTESİ");
+  check("json: 'Vakıf Üniversitesi' türü eşlendi", koc && koc.tur === "Vakıf", koc);
+  const yeni = bul(s.kurumlar, "YEPYENİ TEKNOLOJİ ÜNİVERSİTESİ");
+  check("json: alan adından bağımsız il/tür", yeni && yeni.il === "Konya" && yeni.tur === "Vakıf", yeni);
+  check("json: bozuk JSON metin taramasına düşer",
+    Uni.parse("{bozuk json ANKARA ÜNİVERSİTESİ\tANKARA\tDEVLET").kurumlar.length === 1);
+}
+
 // ---- setList / diff / reset ----
 {
   const eskiSayi = Uni.UNIVERSITIES.length;

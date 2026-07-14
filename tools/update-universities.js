@@ -37,7 +37,7 @@ function indir(url) {
     signal: ctl.signal,
     headers: {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
-      "Accept": "text/html,application/xhtml+xml",
+      "Accept": "text/html,application/xhtml+xml,application/json",
       "Accept-Language": "tr-TR,tr;q=0.9"
     }
   }).then(function (res) {
@@ -79,19 +79,32 @@ function blokUret(kurumlar, tarih) {
   return satirlar.join("\n");
 }
 
+// Kaynakları sırayla dener (MIS, YÖK Akademik); ilk erişilebilen kullanılır
+function kaynaklardanIndir(kaynaklar, i) {
+  if (i >= kaynaklar.length) {
+    console.error("Hiçbir kaynak indirilemedi. Sayfayı tarayıcıda açıp .html");
+    console.error("olarak kaydedin ve şu komutla verin:");
+    console.error("  node tools/update-universities.js --in kaydedilen-sayfa.html");
+    kaynaklar.forEach(function (k) { console.error("Kaynak: " + k.url); });
+    process.exit(2);
+  }
+  var k = kaynaklar[i];
+  return indir(k.url).then(function (icerik) {
+    console.log("Kaynak: " + k.ad + " (" + k.url + ")");
+    return icerik;
+  }, function (e) {
+    console.error(k.ad + " indirilemedi: " + e.message);
+    return kaynaklardanIndir(kaynaklar, i + 1);
+  });
+}
+
 function main() {
   var girisDosya = arg("--in");
-  var url = typeof arg("--url") === "string" ? arg("--url") : Universities.KAYNAK_URL;
+  var ozelUrl = typeof arg("--url") === "string" ? arg("--url") : null;
 
   var kaynakP = girisDosya
     ? Promise.resolve(fs.readFileSync(girisDosya, "utf8"))
-    : indir(url).catch(function (e) {
-        console.error("İndirme başarısız: " + e.message);
-        console.error("Sayfayı tarayıcıda açıp .html olarak kaydedin ve şu komutla verin:");
-        console.error("  node tools/update-universities.js --in kaydedilen-sayfa.html");
-        console.error("Kaynak: " + url);
-        process.exit(2);
-      });
+    : kaynaklardanIndir(ozelUrl ? [{ ad: "--url", url: ozelUrl }] : Universities.KAYNAKLAR, 0);
 
   kaynakP.then(function (icerik) {
     var sonuc = Universities.parse(icerik);

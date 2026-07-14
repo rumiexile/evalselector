@@ -11,7 +11,13 @@
 (function (root) {
   "use strict";
 
-  var KAYNAK_URL = "https://akademik.yok.gov.tr/AkademikArama/view/universityListview.jsp";
+  // Güncelleme kaynakları; sırayla denenir. MIS, YÖKAK'ın kendi alanı olduğu
+  // için ilk sıradadır (aynı alandan/ağdan çalıştırıldığında CORS'a takılmaz).
+  var KAYNAKLAR = [
+    { ad: "YÖKAK MIS", url: "https://mis.yokak.gov.tr/Common/Universities" },
+    { ad: "YÖK Akademik", url: "https://akademik.yok.gov.tr/AkademikArama/view/universityListview.jsp" }
+  ];
+  var KAYNAK_URL = KAYNAKLAR[1].url; // geriye dönük uyumluluk (araç/testler)
   var LS_KEY = "evalselector.universities.v1";
 
   function U(ad, il, tur) { return { ad: ad, il: il, tur: tur }; }
@@ -332,10 +338,9 @@
     hucreler.forEach(function (h) {
       var n = trNorm(h);
       if (!n) return;
-      if (!tur && (n === "devlet" || n === "vakif" || n === "vakif myo" ||
-                   n === "vakif meslek yuksekokulu")) {
-        tur = n === "devlet" ? "Devlet" : "Vakıf";
-        return;
+      if (!tur && /^devlet( universitesi)?$/.test(n)) { tur = "Devlet"; return; }
+      if (!tur && /^vakif( universitesi| myo| meslek yuksekokulu)?$/.test(n)) {
+        tur = "Vakıf"; return;
       }
       if (!il && IL_INDEX[n]) { il = IL_INDEX[n]; return; }
       if (!ad && n.length >= 10 && KURUM_ANAHTAR.test(n) && !GENEL_ETIKET.test(n)) {
@@ -352,6 +357,17 @@
     var adaylar = [];
 
     function eklenmisSayisi() { return adaylar.length; }
+
+    // JSON uç noktası (ör. MIS): nesnelerin dizgi alanları hücre gibi taranır,
+    // alan adlarından bağımsız çalışır.
+    var kirpik = girdi.trim();
+    if (/^[\[{]/.test(kirpik)) {
+      try {
+        jsonTara(JSON.parse(kirpik), adaylar);
+        if (adaylar.length) return birlestir(adaylar);
+      } catch (e) { /* JSON değilmiş: metin/HTML olarak devam */ }
+      adaylar = [];
+    }
 
     if (girdi.indexOf("<") !== -1) {
       // 1) Tablo satırları (hücreler ayrı sütunlar: ad / il / tür)
@@ -380,6 +396,19 @@
     }
 
     return birlestir(adaylar);
+  }
+
+  function jsonTara(dugum, adaylar) {
+    if (Array.isArray(dugum)) { dugum.forEach(function (d) { jsonTara(d, adaylar); }); return; }
+    if (!dugum || typeof dugum !== "object") return;
+    var degerler = [];
+    Object.keys(dugum).forEach(function (k) {
+      var v = dugum[k];
+      if (typeof v === "string") degerler.push(v);
+      else if (v && typeof v === "object") jsonTara(v, adaylar);
+    });
+    var k2 = adayOlustur(degerler);
+    if (k2) adaylar.push(k2);
   }
 
   function duzMetinTara(metin, adaylar) {
@@ -488,6 +517,7 @@
     UNIVERSITIES: UNIVERSITIES,
     COUNTRIES: COUNTRIES,
     EMBEDDED: EMBEDDED,
+    KAYNAKLAR: KAYNAKLAR,
     KAYNAK_URL: KAYNAK_URL,
     meta: function () { return META; },
     parse: parseKurumListesi,
