@@ -331,8 +331,9 @@
       '<label class="btn btn-ghost btn-file">Kayıtlı sayfayı yükle (.html)' +
       '<input type="file" id="kg-dosya" accept=".html,.htm,.txt,.mht,text/html,text/plain" hidden></label>' +
       '</div>' +
-      '<p class="hint">Doğrudan indirme tarayıcı güvenlik kısıtına (CORS) takılırsa: yukarıdaki ' +
-      'bağlantıyı açın, sayfayı kaydedip yükleyin ya da sayfadaki listeyi seçip aşağıya yapıştırın.</p>' +
+      '<p class="hint">İndirme önce doğrudan, olmazsa herkese açık CORS aracıları üzerinden denenir ' +
+      '(yalnızca herkese açık sayfa adresi iletilir). Hiçbiri erişemezse: yukarıdaki bağlantıyı açın, ' +
+      'sayfayı kaydedip yükleyin ya da sayfadaki listeyi seçip aşağıya yapıştırın.</p>' +
       '<textarea id="kg-metin" class="kg-metin" rows="6" ' +
       'placeholder="… ya da YÖK sayfasının içeriğini buraya yapıştırın"></textarea>' +
       '<div class="panel-actions">' +
@@ -383,21 +384,62 @@
       ov.querySelector("#kg-uygula").disabled = false;
     }
 
+    // YÖK CORS başlığı göndermediğinden doğrudan istek çoğu tarayıcıda engellenir;
+    // sırasıyla herkese açık CORS aracıları denenir (yalnızca herkese açık liste
+    // sayfasının adresi iletilir, kişisel veri gönderilmez). İlk başaran kazanır.
+    var INDIRME_YOLLARI = [
+      { ad: "doğrudan bağlantı", url: function (u) { return u; } },
+      { ad: "allorigins aracısı", url: function (u) { return "https://api.allorigins.win/raw?url=" + encodeURIComponent(u); } },
+      { ad: "corsproxy aracısı", url: function (u) { return "https://corsproxy.io/?url=" + encodeURIComponent(u); } },
+      { ad: "jina okuyucu aracısı", url: function (u) { return "https://r.jina.ai/" + u; } }
+    ];
+
+    function zamanAsimliFetch(url, ms) {
+      if (typeof AbortController === "undefined") return fetch(url, { mode: "cors" });
+      var ctl = new AbortController();
+      var t = setTimeout(function () { ctl.abort(); }, ms);
+      return fetch(url, { mode: "cors", signal: ctl.signal })
+        .finally(function () { clearTimeout(t); });
+    }
+
     ov.querySelector("#kg-indir").addEventListener("click", function () {
       var kutu = ov.querySelector("#kg-onizleme");
+      var dugme = ov.querySelector("#kg-indir");
       kutu.hidden = false;
-      kutu.innerHTML = '<p class="hint">İndiriliyor…</p>';
-      fetch(Universities.KAYNAK_URL, { mode: "cors" })
-        .then(function (res) {
-          if (!res.ok) throw new Error("HTTP " + res.status);
-          return res.text();
-        })
-        .then(function (html) { onizle(html, "doğrudan indirme"); })
-        .catch(function (e) {
-          kutu.innerHTML = '<p class="hint">Doğrudan indirme başarısız (' + esc(e.message) +
-            ") — YÖK sunucusu tarayıcıdan erişime (CORS) izin vermiyor olabilir. " +
+      dugme.disabled = true;
+      var denenen = [];
+
+      function dene(i) {
+        if (i >= INDIRME_YOLLARI.length) {
+          dugme.disabled = false;
+          kutu.innerHTML = '<p class="hint">İndirme başarısız (denenen yollar: ' +
+            esc(denenen.join("; ")) +
+            "). YÖK sunucusu tarayıcıdan ve aracılardan erişime izin vermiyor. " +
             "Lütfen sayfayı bağlantıdan açıp kaydedin ve dosya olarak yükleyin ya da içeriği yapıştırın.</p>";
-        });
+          return;
+        }
+        var yol = INDIRME_YOLLARI[i];
+        kutu.innerHTML = '<p class="hint">İndiriliyor (' + esc(yol.ad) + ", " +
+          (i + 1) + "/" + INDIRME_YOLLARI.length + ")…</p>";
+        zamanAsimliFetch(yol.url(Universities.KAYNAK_URL), 12000)
+          .then(function (res) {
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return res.text();
+          })
+          .then(function (icerik) {
+            // Aracılar hata sayfası da döndürebilir; içerik gerçekten kurum
+            // listesi mi diye ayrıştırıp bakılır, değilse sıradaki yol denenir.
+            var sonuc = Universities.parse(icerik);
+            if (sonuc.kurumlar.length < 5) throw new Error("içerikte kurum listesi yok");
+            dugme.disabled = false;
+            onizle(icerik, yol.ad);
+          })
+          .catch(function (e) {
+            denenen.push(yol.ad + ": " + (e && e.name === "AbortError" ? "zaman aşımı" : e.message));
+            dene(i + 1);
+          });
+      }
+      dene(0);
     });
 
     ov.querySelector("#kg-dosya").addEventListener("change", function (e) {
