@@ -31,6 +31,11 @@ check("titleCase: kısaltma korunur",
 check("titleCase: tire sonrası büyür",
   Uni.titleCase("TÜRK-ALMAN ÜNİVERSİTESİ") === "Türk-Alman Üniversitesi",
   Uni.titleCase("TÜRK-ALMAN ÜNİVERSİTESİ"));
+check("titleCase: izafet -i küçük kalır",
+  Uni.titleCase("BEZM-İ ÂLEM VAKIF ÜNİVERSİTESİ") === "Bezm-i Âlem Vakıf Üniversitesi",
+  Uni.titleCase("BEZM-İ ÂLEM VAKIF ÜNİVERSİTESİ"));
+check("parse: sütun başlığı 'Üniversite Tipi' elenir",
+  Uni.parse("ÜNİVERSİTE TİPİ\nANKARA ÜNİVERSİTESİ\tANKARA\tDEVLET").kurumlar.length === 1);
 
 // ---- HTML tablo ayrıştırma (ad / il / tür sütunları) ----
 const tabloHtml = `

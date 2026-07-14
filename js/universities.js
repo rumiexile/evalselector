@@ -1,7 +1,7 @@
 /*
  * universities.js — Türkiye'deki yükseköğretim kurumları listesi.
- * Gömülü liste çevrimdışı yedektir; güncel liste YÖK Akademik'in üniversite
- * listesi sayfasından (KAYNAK_URL) güncellenebilir:
+ * Gömülü liste çevrimdışı yedektir; güncel liste resmî kaynaklardan (KAYNAKLAR:
+ * YÖKAK MIS ya da YÖK Akademik) güncellenebilir:
  *   - Arayüzden: "YÖK listesinden güncelle" (sayfa doğrudan indirilir ya da
  *     içeriği yapıştırılır, parse() ayrıştırır, apply() localStorage'a yazar).
  *   - Komut satırından / MCP oturumunda: `node tools/update-universities.js`
@@ -39,7 +39,7 @@
 
   // >>> KURUM-LISTESI — tools/update-universities.js bu bloğu yeniden üretir.
   // EMBEDDED_GUNCELLEME: listenin YÖK kaynağından üretildiği an (null = elle derlenmiş).
-  var EMBEDDED_GUNCELLEME = null;
+  var EMBEDDED_GUNCELLEME = "2026-07-14T17:59:19.060Z";
   var EMBEDDED = [
     // ---- Devlet üniversiteleri ----
     U("Abdullah Gül Üniversitesi", "Kayseri", "Devlet"),
@@ -175,14 +175,15 @@
     U("Altınbaş Üniversitesi", "İstanbul", "Vakıf"),
     U("Ankara Bilim Üniversitesi", "Ankara", "Vakıf"),
     U("Ankara Medipol Üniversitesi", "Ankara", "Vakıf"),
+    U("Antalya Belek Üniversitesi", "Antalya", "Vakıf"),
     U("Antalya Bilim Üniversitesi", "Antalya", "Vakıf"),
+    U("Ataşehir Adıgüzel Meslek Yüksekokulu", "İstanbul", "Vakıf"),
     U("Atılım Üniversitesi", "Ankara", "Vakıf"),
     U("Avrasya Üniversitesi", "Trabzon", "Vakıf"),
     U("Bahçeşehir Üniversitesi", "İstanbul", "Vakıf"),
     U("Başkent Üniversitesi", "Ankara", "Vakıf"),
-    U("Beykent Üniversitesi", "İstanbul", "Vakıf"),
     U("Beykoz Üniversitesi", "İstanbul", "Vakıf"),
-    U("Bezmiâlem Vakıf Üniversitesi", "İstanbul", "Vakıf"),
+    U("Bezm-i Âlem Vakıf Üniversitesi", "İstanbul", "Vakıf"),
     U("Biruni Üniversitesi", "İstanbul", "Vakıf"),
     U("Çağ Üniversitesi", "Mersin", "Vakıf"),
     U("Çankaya Üniversitesi", "Ankara", "Vakıf"),
@@ -199,6 +200,7 @@
     U("İstanbul Arel Üniversitesi", "İstanbul", "Vakıf"),
     U("İstanbul Atlas Üniversitesi", "İstanbul", "Vakıf"),
     U("İstanbul Aydın Üniversitesi", "İstanbul", "Vakıf"),
+    U("İstanbul Beykent Üniversitesi", "İstanbul", "Vakıf"),
     U("İstanbul Bilgi Üniversitesi", "İstanbul", "Vakıf"),
     U("İstanbul Esenyurt Üniversitesi", "İstanbul", "Vakıf"),
     U("İstanbul Galata Üniversitesi", "İstanbul", "Vakıf"),
@@ -207,15 +209,19 @@
     U("İstanbul Kent Üniversitesi", "İstanbul", "Vakıf"),
     U("İstanbul Kültür Üniversitesi", "İstanbul", "Vakıf"),
     U("İstanbul Medipol Üniversitesi", "İstanbul", "Vakıf"),
+    U("İstanbul Nişantaşı Üniversitesi", "İstanbul", "Vakıf"),
     U("İstanbul Okan Üniversitesi", "İstanbul", "Vakıf"),
     U("İstanbul Rumeli Üniversitesi", "İstanbul", "Vakıf"),
     U("İstanbul Sabahattin Zaim Üniversitesi", "İstanbul", "Vakıf"),
+    U("İstanbul Sağlık ve Sosyal Bilimler Meslek Yüksekokulu", "İstanbul", "Vakıf"),
     U("İstanbul Sağlık ve Teknoloji Üniversitesi", "İstanbul", "Vakıf"),
+    U("İstanbul Şişli Meslek Yüksekokulu", "İstanbul", "Vakıf"),
     U("İstanbul Ticaret Üniversitesi", "İstanbul", "Vakıf"),
     U("İstanbul Topkapı Üniversitesi", "İstanbul", "Vakıf"),
     U("İstanbul Yeni Yüzyıl Üniversitesi", "İstanbul", "Vakıf"),
     U("İstinye Üniversitesi", "İstanbul", "Vakıf"),
     U("İzmir Ekonomi Üniversitesi", "İzmir", "Vakıf"),
+    U("İzmir Kavram Meslek Yüksekokulu", "İzmir", "Vakıf"),
     U("İzmir Tınaztepe Üniversitesi", "İzmir", "Vakıf"),
     U("Kadir Has Üniversitesi", "İstanbul", "Vakıf"),
     U("Kapadokya Üniversitesi", "Nevşehir", "Vakıf"),
@@ -227,7 +233,6 @@
     U("Maltepe Üniversitesi", "İstanbul", "Vakıf"),
     U("MEF Üniversitesi", "İstanbul", "Vakıf"),
     U("Mudanya Üniversitesi", "Bursa", "Vakıf"),
-    U("Nişantaşı Üniversitesi", "İstanbul", "Vakıf"),
     U("Nuh Naci Yazgan Üniversitesi", "Kayseri", "Vakıf"),
     U("OSTİM Teknik Üniversitesi", "Ankara", "Vakıf"),
     U("Özyeğin Üniversitesi", "İstanbul", "Vakıf"),
@@ -280,10 +285,14 @@
       if (i > 0 && BAGLAC[w]) return w;
       var kis = KISALTMALAR.find(function (k) { return k.toLocaleLowerCase("tr-TR") === w; });
       if (kis) return kis;
-      // Tire/ayraç sonrası da büyütülür: "türk-alman" -> "Türk-Alman"
-      return w.replace(/(^|[-–("'.])([a-zçğıöşüâîû])/g, function (m, sep, ch) {
-        return sep + ch.toLocaleUpperCase("tr-TR");
-      });
+      // Tire sonrası da büyütülür ("türk-alman" -> "Türk-Alman"); tek harflik
+      // parça izafettir, küçük kalır ("bezm-i âlem" -> "Bezm-i Âlem").
+      return w.split("-").map(function (p, j) {
+        if (j > 0 && p.length === 1) return p;
+        return p.replace(/(^|[("'.])([a-zçğıöşüâîû])/g, function (m, sep, ch) {
+          return sep + ch.toLocaleUpperCase("tr-TR");
+        });
+      }).join("-");
     });
     return sozcukler.join(" ");
   }
@@ -331,6 +340,7 @@
   // "K-arama-noğlu" gibi adlar da elenir).
   var GENEL_ETIKET = new RegExp(
     "^(t\\.?c\\.?\\s+)?((tum|devlet|vakif)\\s+)?universite(ler|si)?$" +
+    "|^universite (tipi|adi|turu)$" + // tablo sütun başlıkları (ör. MIS)
     "|universite (listesi|ara)|akademik arama|arama sonuc");
 
   function adayOlustur(hucreler) {
