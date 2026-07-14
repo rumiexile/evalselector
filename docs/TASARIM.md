@@ -228,6 +228,25 @@ değerlendirmeler için ülke listesinden seçilir) ve tür. Eklenenler tarayıc
 saklanır; Türkiye dışındaki kurumlarda ülke adı listede ve takım kartında
 gösterilir. Bir kurum seçimden çıkarılırsa kurulmuş takımı da kaldırılır.
 
+Gömülü liste **YÖK Akademik üniversite listesinden** güncellenebilir
+(`universityListview.jsp`). İki yol vardır; ikisi de `Universities.parse`
+ayrıştırıcısını kullanır (tablo satırları → bağlantı metinleri → düz metin
+sırasıyla denenir; bilinen kurumların özenli yazımı korunur, yeni adlar Türkçe
+başlık düzenine çevrilir, il/tür doğrulanamayanlar "Diğer"/"—" işaretlenir):
+
+- **Arayüzden** ("YÖK listesinden güncelle"): sayfa doğrudan indirilmeye
+  çalışılır (YÖK CORS'a izin vermezse engellenir); olmazsa kaydedilmiş sayfa
+  yüklenir ya da içerik yapıştırılır. Fark önizlemesi (eklenen/çıkan, eksik
+  bilgi, seçili olup listeden düşenler) onaylanınca liste `localStorage`'a
+  yazılır ve o tarayıcıda gömülü listenin yerine geçer; "Gömülü listeye dön"
+  ile geri alınır. Seçili olup yeni listede olmayan kurumlar elle eklenmiş
+  kurum olarak korunur.
+- **Komut satırından / MCP oturumunda** (`node tools/update-universities.js`,
+  bkz. `.claude/skills/kurum-listesi-guncelle`): `js/universities.js` içindeki
+  gömülü blok (`>>> KURUM-LISTESI` işaretçileri arası) yeniden üretilir; bu
+  kalıcı yoldur ve tüm kullanıcılara dağıtılır. Betik 150'den az kurum bulursa
+  sayfa yapısı değişti varsayımıyla yazmayı reddeder (`--force` ile geçilir).
+
 ### 9.3 Takım kurulumu, yedek havuzu ve değiştirme
 
 Takımlar yalnızca **asil** kadrodan oluşur. Yedekler takım bazında değil,

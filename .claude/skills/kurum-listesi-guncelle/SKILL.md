@@ -1,0 +1,53 @@
+---
+name: kurum-listesi-guncelle
+description: Değerlendirilecek kurumlar listesini YÖK Akademik'in üniversite listesinden (universityListview.jsp) yeniden üretir. Kullanıcı "kurum listesini güncelle", "üniversite listesini YÖK'ten çek/yenile" gibi bir istekte bulununca kullan.
+---
+
+# Kurum listesini YÖK'ten güncelleme
+
+Uygulamanın "Değerlendirilecek Kurumlar" sekmesindeki liste `js/universities.js`
+içindeki gömülü `EMBEDDED` dizisinden gelir. Bu beceri, listeyi resmî kaynaktan
+yeniden üretir:
+
+Kaynak: https://akademik.yok.gov.tr/AkademikArama/view/universityListview.jsp
+
+## Adımlar
+
+1. **Sayfayı edin.** Sırasıyla dene; ilk başarılı olanla devam et:
+   - `node tools/update-universities.js --dry-run` — betik sayfayı kendisi
+     indirmeyi dener ve farkları gösterir.
+   - Betik indiremezse (akademik.yok.gov.tr yurt dışı/veri merkezi IP'lerini
+     ve tanımadığı istemcileri 403 ile engelleyebilir) `WebFetch` ya da varsa
+     bir MCP fetch aracıyla sayfayı almayı dene; içeriği bir dosyaya yazıp
+     `--in` ile ver.
+   - O da olmazsa kullanıcıdan sayfayı tarayıcısında açıp **Ctrl+S ile
+     kaydetmesini** (ya da içeriği kopyalayıp bir dosyaya yapıştırmasını) iste;
+     dosyayı `--in` ile ver. Kullanıcı içeriği doğrudan sohbete de
+     yapıştırabilir — o zaman scratchpad'e kaydedip `--in` ile kullan.
+
+2. **Önce farkları göster:**
+   `node tools/update-universities.js --in <dosya> --dry-run`
+   Eklenen/çıkan kurumları ve "il/tür doğrulanamadı" uyarılarını kullanıcıya
+   özetle. Beklenmedik derecede az kurum bulunursa (betik ≥150 bekler) sayfa
+   yapısı değişmiş demektir; `js/universities.js` içindeki `parse()`
+   ayrıştırıcısını sayfaya göre uyarla, `--force` ile geçiştirme.
+
+3. **Yaz ve doğrula:**
+   - `node tools/update-universities.js --in <dosya>`
+   - `node test/universities.test.js && node test/engine.test.js && node test/teams.test.js`
+
+4. **Commit et** (kullanıcının olağan akışına uygun biçimde) ve eklenen/çıkan
+   kurumları commit mesajında özetle.
+
+## Notlar
+
+- Aynı ayrıştırıcı (`Universities.parse`) uygulama arayüzündeki "YÖK
+  listesinden güncelle" penceresinde de çalışır; oradaki güncelleme yalnızca
+  kullanıcının tarayıcısına (localStorage) yazılır. Kalıcı, herkese dağıtılan
+  güncelleme bu becerideki yoldur (gömülü listeyi değiştirir).
+- YÖK sayfası adları BÜYÜK harfle verir; ayrıştırıcı bilinen kurumların özenli
+  yazımını korur, yenilerini Türkçe başlık düzenine çevirir. Yeni bir kurumda
+  il/tür doğrulanamadıysa kayıt "Diğer"/"—" olarak eklenir — mümkünse YÖK
+  sayfasındaki bilgiden elle düzeltip öyle commit et.
+- `EMBEDDED_GUNCELLEME` alanını betik kendisi damgalar; elle düzenleme
+  yaptıysan dokunma.

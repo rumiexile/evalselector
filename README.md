@@ -31,8 +31,11 @@ Kurulum gerektirmez:
 2. Takım şablonunu gözden geçirin: akademik üye sayısı, idari/öğrenci
    zorunluluğu, başkan görev kriteri, UKAP için asgari dil puanı, ilk kez
    görev alacak üye aralığı, yedek havuzu (rol başına kişi sayısı).
-3. Gömülü listeden değerlendirilecek üniversiteleri seçin (eksik kurumlar
-   elle eklenebilir).
+3. Kurum listesinden değerlendirilecek üniversiteleri seçin (eksik kurumlar
+   elle eklenebilir). Liste gömülü kopyayla gelir; **"YÖK listesinden
+   güncelle"** ile [YÖK Akademik üniversite listesinden](https://akademik.yok.gov.tr/AkademikArama/view/universityListview.jsp)
+   yenilenebilir (sayfa doğrudan indirilemezse kaydedilmiş sayfa yüklenir ya
+   da içerik yapıştırılır; güncel liste tarayıcıda saklanır).
 4. **"Eksik takımları otomatik kur (rastlantısal)"** ile asil kadroları kurun.
    Türe bağlı **Yedek Havuzu** kartında **"Havuzu oluştur/güncelle"** ile
    yedekleri hazırlayın. Bir üyeyi **Değiştir** ile değiştirdiğinizde önce
@@ -63,8 +66,21 @@ mimari için bkz. [`docs/TASARIM.md`](docs/TASARIM.md).
 ## Geliştirme
 
 ```bash
-node test/engine.test.js   # ayrıştırıcı ve puanlama motoru birim testleri
+node test/engine.test.js        # ayrıştırıcı ve puanlama motoru birim testleri
+node test/teams.test.js         # takım kurma kuralları
+node test/universities.test.js  # YÖK kurum listesi ayrıştırıcısı
 ```
+
+Gömülü kurum listesi YÖK Akademik'ten yeniden üretilebilir:
+
+```bash
+node tools/update-universities.js            # sayfayı indir + js/universities.js'i güncelle
+node tools/update-universities.js --dry-run  # yazmadan farkları göster
+node tools/update-universities.js --in kayitli-sayfa.html  # indirme engellenirse
+```
+
+(Claude Code/MCP oturumunda "kurum listesini güncelle" isteği
+`.claude/skills/kurum-listesi-guncelle` becerisiyle aynı akışı çalıştırır.)
 
 Puanlama çekirdeği (`js/criteria.js`, `js/textparse.js`, `js/engine.js`)
 hem tarayıcıda hem Node.js altında çalışır; derleme adımı yoktur.

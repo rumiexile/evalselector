@@ -305,6 +305,20 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-fam
 .kurum-list { max-height: 300px; }
 .kurum-list .chk { margin: 5px 0; }
 
+/* Kurum listesi güncelleme penceresi */
+.kg-metin {
+  width: 100%; min-height: 110px; resize: vertical; margin-top: 4px;
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+  font: 12.5px/1.45 var(--font-data, monospace);
+}
+.kg-onizleme {
+  max-height: 200px; overflow-y: auto; font-size: 13.5px;
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 10px 0 4px;
+  background: var(--brand-tint);
+}
+.kg-onizleme ul { margin: 6px 0 0; padding-left: 18px; }
+.kg-onizleme li { margin: 3px 0; }
+
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {
   display: inline-flex; align-items: center; gap: 4px;

@@ -1,11 +1,18 @@
 /*
  * universities.js — Türkiye'deki yükseköğretim kurumları listesi.
- * Liste kod içinde gömülüdür (uygulama çevrimdışı çalışır); güncel YÖK
- * listesiyle küçük farklar olabilir — arayüzden elle kurum eklenebilir.
- * Alanlar: ad, il (şehir), tur ("Devlet" | "Vakıf"), ulke (boş = Türkiye)
+ * Gömülü liste çevrimdışı yedektir; güncel liste YÖK Akademik'in üniversite
+ * listesi sayfasından (KAYNAK_URL) güncellenebilir:
+ *   - Arayüzden: "YÖK listesinden güncelle" (sayfa doğrudan indirilir ya da
+ *     içeriği yapıştırılır, parse() ayrıştırır, apply() localStorage'a yazar).
+ *   - Komut satırından / MCP oturumunda: `node tools/update-universities.js`
+ *     gömülü listeyi bu dosyada yeniden üretir.
+ * Alanlar: ad, il (şehir), tur ("Devlet" | "Vakıf" | "Diğer"), ulke (boş = Türkiye)
  */
 (function (root) {
   "use strict";
+
+  var KAYNAK_URL = "https://akademik.yok.gov.tr/AkademikArama/view/universityListview.jsp";
+  var LS_KEY = "evalselector.universities.v1";
 
   function U(ad, il, tur) { return { ad: ad, il: il, tur: tur }; }
 
@@ -24,7 +31,10 @@
     "Slovakya", "Slovenya", "Suudi Arabistan", "Tacikistan", "Tunus",
     "Türkmenistan", "Ukrayna", "Ürdün", "Yunanistan", "Diğer"];
 
-  var UNIVERSITIES = [
+  // >>> KURUM-LISTESI — tools/update-universities.js bu bloğu yeniden üretir.
+  // EMBEDDED_GUNCELLEME: listenin YÖK kaynağından üretildiği an (null = elle derlenmiş).
+  var EMBEDDED_GUNCELLEME = null;
+  var EMBEDDED = [
     // ---- Devlet üniversiteleri ----
     U("Abdullah Gül Üniversitesi", "Kayseri", "Devlet"),
     U("Adana Alparslan Türkeş Bilim ve Teknoloji Üniversitesi", "Adana", "Devlet"),
@@ -37,10 +47,10 @@
     U("Alanya Alaaddin Keykubat Üniversitesi", "Antalya", "Devlet"),
     U("Amasya Üniversitesi", "Amasya", "Devlet"),
     U("Anadolu Üniversitesi", "Eskişehir", "Devlet"),
-    U("Ankara Üniversitesi", "Ankara", "Devlet"),
     U("Ankara Hacı Bayram Veli Üniversitesi", "Ankara", "Devlet"),
     U("Ankara Müzik ve Güzel Sanatlar Üniversitesi", "Ankara", "Devlet"),
     U("Ankara Sosyal Bilimler Üniversitesi", "Ankara", "Devlet"),
+    U("Ankara Üniversitesi", "Ankara", "Devlet"),
     U("Ankara Yıldırım Beyazıt Üniversitesi", "Ankara", "Devlet"),
     U("Ardahan Üniversitesi", "Ardahan", "Devlet"),
     U("Artvin Çoruh Üniversitesi", "Artvin", "Devlet"),
@@ -74,8 +84,8 @@
     U("Fırat Üniversitesi", "Elazığ", "Devlet"),
     U("Galatasaray Üniversitesi", "İstanbul", "Devlet"),
     U("Gazi Üniversitesi", "Ankara", "Devlet"),
-    U("Gaziantep Üniversitesi", "Gaziantep", "Devlet"),
     U("Gaziantep İslam Bilim ve Teknoloji Üniversitesi", "Gaziantep", "Devlet"),
+    U("Gaziantep Üniversitesi", "Gaziantep", "Devlet"),
     U("Gebze Teknik Üniversitesi", "Kocaeli", "Devlet"),
     U("Giresun Üniversitesi", "Giresun", "Devlet"),
     U("Gümüşhane Üniversitesi", "Gümüşhane", "Devlet"),
@@ -88,10 +98,10 @@
     U("Isparta Uygulamalı Bilimler Üniversitesi", "Isparta", "Devlet"),
     U("İnönü Üniversitesi", "Malatya", "Devlet"),
     U("İskenderun Teknik Üniversitesi", "Hatay", "Devlet"),
-    U("İstanbul Üniversitesi", "İstanbul", "Devlet"),
-    U("İstanbul Üniversitesi-Cerrahpaşa", "İstanbul", "Devlet"),
     U("İstanbul Medeniyet Üniversitesi", "İstanbul", "Devlet"),
     U("İstanbul Teknik Üniversitesi", "İstanbul", "Devlet"),
+    U("İstanbul Üniversitesi", "İstanbul", "Devlet"),
+    U("İstanbul Üniversitesi-Cerrahpaşa", "İstanbul", "Devlet"),
     U("İzmir Bakırçay Üniversitesi", "İzmir", "Devlet"),
     U("İzmir Demokrasi Üniversitesi", "İzmir", "Devlet"),
     U("İzmir Kâtip Çelebi Üniversitesi", "İzmir", "Devlet"),
@@ -131,8 +141,8 @@
     U("Pamukkale Üniversitesi", "Denizli", "Devlet"),
     U("Recep Tayyip Erdoğan Üniversitesi", "Rize", "Devlet"),
     U("Sağlık Bilimleri Üniversitesi", "İstanbul", "Devlet"),
-    U("Sakarya Üniversitesi", "Sakarya", "Devlet"),
     U("Sakarya Uygulamalı Bilimler Üniversitesi", "Sakarya", "Devlet"),
+    U("Sakarya Üniversitesi", "Sakarya", "Devlet"),
     U("Samsun Üniversitesi", "Samsun", "Devlet"),
     U("Selçuk Üniversitesi", "Konya", "Devlet"),
     U("Siirt Üniversitesi", "Siirt", "Devlet"),
@@ -153,7 +163,6 @@
     U("Yıldız Teknik Üniversitesi", "İstanbul", "Devlet"),
     U("Yozgat Bozok Üniversitesi", "Yozgat", "Devlet"),
     U("Zonguldak Bülent Ecevit Üniversitesi", "Zonguldak", "Devlet"),
-
     // ---- Vakıf üniversiteleri ----
     U("Acıbadem Mehmet Ali Aydınlar Üniversitesi", "İstanbul", "Vakıf"),
     U("Alanya Üniversitesi", "Antalya", "Vakıf"),
@@ -204,8 +213,8 @@
     U("İzmir Tınaztepe Üniversitesi", "İzmir", "Vakıf"),
     U("Kadir Has Üniversitesi", "İstanbul", "Vakıf"),
     U("Kapadokya Üniversitesi", "Nevşehir", "Vakıf"),
-    U("Koç Üniversitesi", "İstanbul", "Vakıf"),
     U("Kocaeli Sağlık ve Teknoloji Üniversitesi", "Kocaeli", "Vakıf"),
+    U("Koç Üniversitesi", "İstanbul", "Vakıf"),
     U("Konya Gıda ve Tarım Üniversitesi", "Konya", "Vakıf"),
     U("KTO Karatay Üniversitesi", "Konya", "Vakıf"),
     U("Lokman Hekim Üniversitesi", "Ankara", "Vakıf"),
@@ -229,8 +238,266 @@
     U("Yeditepe Üniversitesi", "İstanbul", "Vakıf"),
     U("Yüksek İhtisas Üniversitesi", "Ankara", "Vakıf")
   ];
+  // <<< KURUM-LISTESI
 
-  var api = { UNIVERSITIES: UNIVERSITIES, COUNTRIES: COUNTRIES };
+  // Canlı liste: gömülü kopyayla başlar; setList() içeriği yerinde değiştirir
+  // (uygulama genelindeki Universities.UNIVERSITIES referansları geçerli kalır).
+  var UNIVERSITIES = EMBEDDED.map(kopya);
+  var META = { kaynak: "gomulu", guncelleme: EMBEDDED_GUNCELLEME };
+
+  function kopya(u) {
+    var k = { ad: u.ad, il: u.il || "—", tur: u.tur || "Diğer" };
+    if (u.ulke) k.ulke = u.ulke;
+    return k;
+  }
+
+  // ---------------- Yardımcılar ----------------
+
+  // Türkçe duyarsız normalizasyon (textparse.norm'a bağımlılık olmadan;
+  // bu dosya Node altında tek başına da kullanılır).
+  var TR_MAP = {
+    "İ": "i", "I": "i", "ı": "i", "Ş": "s", "ş": "s", "Ğ": "g", "ğ": "g",
+    "Ü": "u", "ü": "u", "Ö": "o", "ö": "o", "Ç": "c", "ç": "c",
+    "Â": "a", "â": "a", "Î": "i", "î": "i", "Û": "u", "û": "u"
+  };
+  function trNorm(s) {
+    return String(s === null || s === undefined ? "" : s)
+      .replace(/[İIıŞşĞğÜüÖöÇçÂâÎîÛû]/g, function (c) { return TR_MAP[c]; })
+      .toLowerCase().replace(/\s+/g, " ").trim();
+  }
+
+  // Bağlaçlar başlık düzeninde küçük kalır; kısaltmalar olduğu gibi korunur.
+  var BAGLAC = { "ve": 1, "ile": 1, "için": 1 };
+  var KISALTMALAR = ["KTO", "MEF", "OSTİM", "TED", "TOBB", "THK", "ATASAREN", "MSÜ"];
+  function trTitleCase(s) {
+    var sozcukler = String(s).toLocaleLowerCase("tr-TR").split(/\s+/).map(function (w, i) {
+      if (i > 0 && BAGLAC[w]) return w;
+      var kis = KISALTMALAR.find(function (k) { return k.toLocaleLowerCase("tr-TR") === w; });
+      if (kis) return kis;
+      // Tire/ayraç sonrası da büyütülür: "türk-alman" -> "Türk-Alman"
+      return w.replace(/(^|[-–("'.])([a-zçğıöşüâîû])/g, function (m, sep, ch) {
+        return sep + ch.toLocaleUpperCase("tr-TR");
+      });
+    });
+    return sozcukler.join(" ");
+  }
+
+  var NAMED_ENTITIES = {
+    amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ",
+    Ccedil: "Ç", ccedil: "ç", Ouml: "Ö", ouml: "ö", Uuml: "Ü", uuml: "ü",
+    Acirc: "Â", acirc: "â", Icirc: "Î", icirc: "î", Ucirc: "Û", ucirc: "û"
+  };
+  function decodeEntities(s) {
+    return String(s)
+      .replace(/&#x([0-9a-fA-F]+);/g, function (m, h) { return String.fromCharCode(parseInt(h, 16)); })
+      .replace(/&#(\d+);/g, function (m, d) { return String.fromCharCode(+d); })
+      .replace(/&([a-zA-Z]+);/g, function (m, n) { return NAMED_ENTITIES[n] || m; });
+  }
+  function stripTags(s) {
+    return decodeEntities(String(s).replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").trim();
+  }
+
+  // 81 il — sayfadaki şehir sütununu/metnini yakalamada kullanılır
+  var ILLER = ["Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Aksaray", "Amasya",
+    "Ankara", "Antalya", "Ardahan", "Artvin", "Aydın", "Balıkesir", "Bartın",
+    "Batman", "Bayburt", "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur",
+    "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli", "Diyarbakır", "Düzce",
+    "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep",
+    "Giresun", "Gümüşhane", "Hakkari", "Hatay", "Iğdır", "Isparta", "İstanbul",
+    "İzmir", "Kahramanmaraş", "Karabük", "Karaman", "Kars", "Kastamonu",
+    "Kayseri", "Kırıkkale", "Kırklareli", "Kırşehir", "Kilis", "Kocaeli",
+    "Konya", "Kütahya", "Malatya", "Manisa", "Mardin", "Mersin", "Muğla",
+    "Muş", "Nevşehir", "Niğde", "Ordu", "Osmaniye", "Rize", "Sakarya",
+    "Samsun", "Siirt", "Sinop", "Sivas", "Şanlıurfa", "Şırnak", "Tekirdağ",
+    "Tokat", "Trabzon", "Tunceli", "Uşak", "Van", "Yalova", "Yozgat",
+    "Zonguldak"];
+  var IL_INDEX = {};
+  ILLER.forEach(function (il) { IL_INDEX[trNorm(il)] = il; });
+
+  // ---------------- YÖK sayfası ayrıştırıcısı ----------------
+  // universityListview.jsp'nin HTML'ini (tam sayfa kaynağı, tablo parçası ya da
+  // kopyalanıp yapıştırılan düz metin) kurum kayıtlarına çevirir. Sayfa yapısı
+  // değişebildiğinden üç aşamalı ve toleranslıdır: tablo satırları -> bağlantı
+  // metinleri -> düz metin satırları.
+  var KURUM_ANAHTAR = /(universite|enstitu|akadem|yuksekokul)/;
+  // Menü/başlık benzeri genel etiketler kurum adı sayılmaz.
+  // Dikkat: parçalı kalıplar tam ifade olmalı ("arama" tek başına olursa
+  // "K-arama-noğlu" gibi adlar da elenir).
+  var GENEL_ETIKET = new RegExp(
+    "^(t\\.?c\\.?\\s+)?((tum|devlet|vakif)\\s+)?universite(ler|si)?$" +
+    "|universite (listesi|ara)|akademik arama|arama sonuc");
+
+  function adayOlustur(hucreler) {
+    var ad = null, il = null, tur = null;
+    hucreler.forEach(function (h) {
+      var n = trNorm(h);
+      if (!n) return;
+      if (!tur && (n === "devlet" || n === "vakif" || n === "vakif myo" ||
+                   n === "vakif meslek yuksekokulu")) {
+        tur = n === "devlet" ? "Devlet" : "Vakıf";
+        return;
+      }
+      if (!il && IL_INDEX[n]) { il = IL_INDEX[n]; return; }
+      if (!ad && n.length >= 10 && KURUM_ANAHTAR.test(n) && !GENEL_ETIKET.test(n)) {
+        // Baştaki sıra numarası ve fazla boşluklar atılır
+        ad = h.replace(/^\s*\d+\s*[.)-]?\s*/, "").replace(/\s+/g, " ").trim();
+      }
+    });
+    if (!ad) return null;
+    return { ad: ad, il: il, tur: tur };
+  }
+
+  function parseKurumListesi(girdi) {
+    girdi = String(girdi || "");
+    var adaylar = [];
+
+    function eklenmisSayisi() { return adaylar.length; }
+
+    if (girdi.indexOf("<") !== -1) {
+      // 1) Tablo satırları (hücreler ayrı sütunlar: ad / il / tür)
+      (girdi.match(/<tr[\s\S]*?<\/tr>/gi) || []).forEach(function (satir) {
+        var hucreler = (satir.match(/<t[dh][\s\S]*?<\/t[dh]>/gi) || []).map(stripTags);
+        var k = adayOlustur(hucreler);
+        if (k) adaylar.push(k);
+      });
+      // 2) Yeterli kayıt çıkmadıysa bağlantı metinleri (liste görünümü)
+      if (eklenmisSayisi() < 5) {
+        adaylar = [];
+        (girdi.match(/<a\b[\s\S]*?<\/a>/gi) || []).forEach(function (a) {
+          var k = adayOlustur([stripTags(a)]);
+          if (k) adaylar.push(k);
+        });
+      }
+      // 3) Hâlâ yoksa: etiketleri satır sonlarına çevirip düz metin gibi tara
+      if (eklenmisSayisi() < 5) {
+        adaylar = [];
+        duzMetinTara(decodeEntities(girdi
+          .replace(/<(br|\/tr|\/li|\/p|\/div|\/h[1-6])[^>]*>/gi, "\n")
+          .replace(/<[^>]*>/g, " ")), adaylar);
+      }
+    } else {
+      duzMetinTara(girdi, adaylar);
+    }
+
+    return birlestir(adaylar);
+  }
+
+  function duzMetinTara(metin, adaylar) {
+    metin.split(/\r?\n/).forEach(function (satir) {
+      var hucreler = satir.split(/\t|;|·|\|| {2,}/).map(function (h) {
+        return h.replace(/\s+/g, " ").trim();
+      }).filter(Boolean);
+      if (!hucreler.length) return;
+      var k = adayOlustur(hucreler);
+      if (k) adaylar.push(k);
+    });
+  }
+
+  // Tekrarları ele, eksik il/tür bilgisini mevcut (gömülü ya da canlı)
+  // listeden tamamla; yeni adları Türkçe başlık düzenine çevir.
+  function birlestir(adaylar) {
+    var bilinen = {};
+    UNIVERSITIES.concat(EMBEDDED).forEach(function (u) {
+      var n = trNorm(u.ad);
+      if (!bilinen[n]) bilinen[n] = u;
+    });
+    var gorulen = {}, kurumlar = [], eksikBilgi = [];
+    adaylar.forEach(function (k) {
+      var n = trNorm(k.ad);
+      if (gorulen[n]) { // tekrar: eksik alanları tamamlamak için kullan
+        var v = gorulen[n];
+        if (!v.il && k.il) v.il = k.il;
+        if (!v.tur && k.tur) v.tur = k.tur;
+        return;
+      }
+      var kayit = { ad: k.ad, il: k.il, tur: k.tur };
+      var eski = bilinen[n];
+      if (eski) {
+        kayit.ad = eski.ad;               // özenli yazım korunur (Kâtip, Bezmiâlem…)
+        if (!kayit.il) kayit.il = eski.il;
+        if (!kayit.tur) kayit.tur = eski.tur;
+      } else if (kayit.ad === kayit.ad.toLocaleUpperCase("tr-TR")) {
+        kayit.ad = trTitleCase(kayit.ad); // YÖK sayfası adları BÜYÜK harfle verir
+      }
+      gorulen[n] = kayit;
+      kurumlar.push(kayit);
+    });
+    kurumlar.forEach(function (k) {
+      if (!k.il || !k.tur) eksikBilgi.push(k.ad);
+      k.il = k.il || "—";
+      k.tur = k.tur || "Diğer";
+    });
+    return { kurumlar: kurumlar, eksikBilgi: eksikBilgi };
+  }
+
+  // ---------------- Liste yönetimi ----------------
+  function setList(liste, meta) {
+    UNIVERSITIES.length = 0;
+    liste.forEach(function (u) { UNIVERSITIES.push(kopya(u)); });
+    META = {
+      kaynak: (meta && meta.kaynak) || "yok",
+      guncelleme: (meta && meta.guncelleme) || null
+    };
+  }
+
+  // Yeni listeyi uygula ve tarayıcıda kalıcılaştır
+  function applyList(liste) {
+    setList(liste, { kaynak: "yok", guncelleme: new Date().toISOString() });
+    if (tarayicida()) {
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify({
+          kurumlar: UNIVERSITIES, guncelleme: META.guncelleme
+        }));
+      } catch (e) { /* depolama dolu/kapalı: bellek içi liste yine geçerli */ }
+    }
+    return META;
+  }
+
+  function resetList() {
+    setList(EMBEDDED, { kaynak: "gomulu", guncelleme: EMBEDDED_GUNCELLEME });
+    if (tarayicida()) {
+      try { localStorage.removeItem(LS_KEY); } catch (e) { /* yoksay */ }
+    }
+  }
+
+  function diffAgainstCurrent(yeniListe) {
+    var eski = {}, yeni = {};
+    UNIVERSITIES.forEach(function (u) { eski[trNorm(u.ad)] = u.ad; });
+    yeniListe.forEach(function (u) { yeni[trNorm(u.ad)] = u.ad; });
+    var eklenen = [], cikan = [];
+    Object.keys(yeni).forEach(function (n) { if (!eski[n]) eklenen.push(yeni[n]); });
+    Object.keys(eski).forEach(function (n) { if (!yeni[n]) cikan.push(eski[n]); });
+    return { eklenen: eklenen, cikan: cikan };
+  }
+
+  function tarayicida() {
+    return typeof document !== "undefined" && typeof localStorage !== "undefined";
+  }
+
+  // Tarayıcıda: daha önce YÖK'ten güncellenmiş liste varsa onunla başla
+  if (tarayicida()) {
+    try {
+      var sakli = JSON.parse(localStorage.getItem(LS_KEY) || "null");
+      if (sakli && Array.isArray(sakli.kurumlar) && sakli.kurumlar.length) {
+        setList(sakli.kurumlar, { kaynak: "yok", guncelleme: sakli.guncelleme || null });
+      }
+    } catch (e) { /* bozuk kayıt: gömülü listeyle devam */ }
+  }
+
+  var api = {
+    UNIVERSITIES: UNIVERSITIES,
+    COUNTRIES: COUNTRIES,
+    EMBEDDED: EMBEDDED,
+    KAYNAK_URL: KAYNAK_URL,
+    meta: function () { return META; },
+    parse: parseKurumListesi,
+    setList: setList,
+    apply: applyList,
+    reset: resetList,
+    diff: diffAgainstCurrent,
+    norm: trNorm,
+    titleCase: trTitleCase
+  };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.Universities = api;
 })(typeof self !== "undefined" ? self : this);
