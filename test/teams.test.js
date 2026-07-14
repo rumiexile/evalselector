@@ -168,14 +168,18 @@ check("başkan: Prof değilse reddedilir", Teams.rolSebebi(docBaskan, "baskan", 
 const noProf = Teams.cloneTemplate ? null : Object.assign(JSON.parse(JSON.stringify(kap)), { baskanProf: false });
 check("başkan: Prof şartı kapatılabilir", Teams.rolSebebi(docBaskan, "baskan", noProf) === null);
 
-// 2) Başkan en tecrübeli — ekKisitlar (uygunAdaylar ctx üzerinden)
+// 2) Başkan en tecrübeli — yalnızca akademik üyeler (ekKisitlar / uygunAdaylar ctx üzerinden)
 const uyeAdayGorevli = aday("m1", "Üye", "M Üni", "Akademik", 3, 3, 0, "YDS 80"); // görev 6
 const uyeSonuc = Teams.uygunAdaylar([uyeAdayGorevli], "akademik", "X Üni", kap, { baskanGorevUst: 5 });
-check("tecrübe: üye başkandan tecrübeli olamaz", uyeSonuc.uygun.length === 0 &&
+check("tecrübe: akademik üye başkandan tecrübeli olamaz", uyeSonuc.uygun.length === 0 &&
   uyeSonuc.red[0].sebep.indexOf("başkandan daha tecrübeli") !== -1);
+// İdari üye tecrübe kısıtından muaf (kural yalnızca akademik üyeleri kapsar)
+const idariGorevli = { "TcNo": "ig", "Ad": "İd", "Soyad": "Ar", "Universite": "M Üni", "Tip": "İdari", "TkBsk": 4, "AkdGor": 4, "IdrGor": 0 }; // görev 8
+const idariSonuc = Teams.uygunAdaylar([idariGorevli], "idari", "X Üni", kap, { baskanGorevUst: 5 });
+check("tecrübe: idari üye başkandan tecrübeli olabilir", idariSonuc.uygun.length === 1);
 const bskAday = aday("b1", "Bşk", "N Üni", "Akademik", 2, 1, 0, "YDS 80"); // görev 3
 const bskSonuc = Teams.uygunAdaylar([bskAday], "baskan", "X Üni", kap, { uyeGorevAlt: 5 });
-check("tecrübe: başkan üyelerden az tecrübeli olamaz", bskSonuc.uygun.length === 0 &&
+check("tecrübe: başkan akademik üyelerden az tecrübeli olamaz", bskSonuc.uygun.length === 0 &&
   bskSonuc.red[0].sebep.indexOf("daha tecrübeli olmalı") !== -1);
 
 // 3) Vakıf idari yalnızca devlet kurumlarına (aday ve hedef FARKLI kurumlar)
@@ -191,23 +195,34 @@ const devletIdari = { "TcNo": "di", "Ad": "İd2", "Soyad": "Ar", "Universite": "
 check("devlet idari: vakıf kuruma atanabilir",
   Teams.uygunAdaylar([devletIdari], "idari", "V2 Üni", kap, { uniTurOf: uniTurOf, kurumTur: "Vakıf" }).uygun.length === 1);
 
-// autoAssign: başkan diğer tüm üyelerden daha tecrübeli
+// autoAssign: başkan akademik üyelerden daha tecrübeli (idari/öğrenci kapsam dışı)
 const rng2 = rngYap(7);
 const otoB = Teams.autoAssign(havuz, "X Üniversitesi", "kap", "2026-1", kap, { rng: rng2 });
 const tB = otoB.takim;
 if (tB.asil.baskan) {
   const bg = Teams.gorevSayisi(havuz.find(r => r["TcNo"] === tB.asil.baskan));
-  const digerGorevler = [].concat(tB.asil.akademik, [tB.asil.idari, tB.asil.ogrenci])
+  const akademikGorevler = tB.asil.akademik
     .filter(Boolean).map(tc => Teams.gorevSayisi(havuz.find(r => r["TcNo"] === tc)));
-  check("oto: başkan en tecrübeli", digerGorevler.every(g => bg > g), { bg, digerGorevler });
-} else check("oto: başkan en tecrübeli", true);
+  check("oto: başkan akademik üyelerden en tecrübeli", akademikGorevler.every(g => bg > g), { bg, akademikGorevler });
+} else check("oto: başkan akademik üyelerden en tecrübeli", true);
 
-// validateTeam: başkan en tecrübeli değilse uyarı
+// validateTeam: başkan akademik üyeden tecrübesizse uyarı
 const zayifBaskan = Teams.bosTakim("X Üni", "kap", "d", kap);
 zayifBaskan.asil.baskan = "3"; // görev 1
 zayifBaskan.asil.akademik = ["1"]; // görev 7
 const vZ = Teams.validateTeam(zayifBaskan, havuz, {});
-check("doğrulama: başkan tecrübe uyarısı", vZ.some(x => x.indexOf("daha tecrübeli olmalı") !== -1), vZ);
+check("doğrulama: başkan akademik tecrübe uyarısı", vZ.some(x => x.indexOf("daha tecrübeli olmalı") !== -1), vZ);
+
+// validateTeam: idari üye başkandan tecrübeli olsa da tecrübe uyarısı verilmez
+const superIdari = { "TcNo": "10", "Ad": "Süper", "Soyad": "İdari", "Universite": "J Üniversitesi",
+  "Tip": "İdari", "TkBsk": 5, "AkdGor": 5, "IdrGor": 5, "YabanciDil": "", "Secim": "E" }; // görev 15
+const havuzIdari = havuz.concat([superIdari]);
+const idariTecrubeli = Teams.bosTakim("X Üni", "kap", "d", kap);
+idariTecrubeli.asil.baskan = "1"; // görev 7 (akademik)
+idariTecrubeli.asil.akademik = ["3"]; // görev 1 (akademik, başkandan az)
+idariTecrubeli.asil.idari = "10"; // idari görev 15 — kapsam dışı, uyarı vermemeli
+const vI = Teams.validateTeam(idariTecrubeli, havuzIdari, {});
+check("doğrulama: idari tecrübe uyarısı vermez", !vI.some(x => x.indexOf("daha tecrübeli olmalı") !== -1), vI);
 
 // validateTeam: cinsiyet dengesi uyarısı (gerçek adlarla)
 const cinsHavuz = [

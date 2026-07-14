@@ -746,12 +746,11 @@
       var ekCtx = { uniTurOf: uniTurOf, kurumTur: uniTurOf(kurum) };
       if (s.baskanEnTecrubeli) {
         if (rol === "baskan") {
+          // Yalnızca akademik üyeler kapsanır (idari/öğrenci hariç)
           var digerMax = -1;
           takim.asil.akademik.forEach(function (tc) { if (tc) digerMax = Math.max(digerMax, gorevOf(tc)); });
-          if (takim.asil.idari) digerMax = Math.max(digerMax, gorevOf(takim.asil.idari));
-          if (takim.asil.ogrenci) digerMax = Math.max(digerMax, gorevOf(takim.asil.ogrenci));
           if (digerMax >= 0) ekCtx.uyeGorevAlt = digerMax;
-        } else if (takim.asil.baskan) {
+        } else if (rol === "akademik" && takim.asil.baskan) {
           ekCtx.baskanGorevUst = gorevOf(takim.asil.baskan);
         }
       }

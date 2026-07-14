@@ -38,7 +38,7 @@
     ayniKurumTek: true,  // aynı üniversiteden en fazla bir üye
     yedekSayisi: 1,      // rol başına yedek sayısı
     baskanProf: true,    // takım başkanı Prof. Dr. olmalı
-    baskanEnTecrubeli: true,     // başkan diğer tüm üyelerden daha tecrübeli olmalı
+    baskanEnTecrubeli: true,     // başkan akademik üyelerden daha tecrübeli olmalı
     vakifIdariDevletSinir: true, // vakıf idari değerlendirici yalnızca devlet kurumlarına
     cinsiyetDenge: true          // kadın/erkek üye sayısı mümkün mertebe eşit (yumuşak kural)
   };
@@ -152,14 +152,14 @@
         return "Vakıf üniversitesinden idari değerlendirici yalnızca devlet üniversitelerine atanabilir.";
       }
     }
-    // 2) Başkan diğer tüm üyelerden daha tecrübeli olmalı
+    // 2) Başkan akademik üyelerden daha tecrübeli olmalı (yalnızca akademik üyeler kapsanır)
     if (template.baskanEnTecrubeli) {
       var g = gorevSayisi(row);
       if (rol === "baskan" && ctx.uyeGorevAlt != null && g <= ctx.uyeGorevAlt) {
-        return "Başkan diğer üyelerden daha tecrübeli olmalı (görev " + g + " ≤ üye en yüksek " + ctx.uyeGorevAlt + ").";
+        return "Başkan akademik üyelerden daha tecrübeli olmalı (görev " + g + " ≤ akademik üye en yüksek " + ctx.uyeGorevAlt + ").";
       }
-      if (rol !== "baskan" && ctx.baskanGorevUst != null && g >= ctx.baskanGorevUst) {
-        return "Üye, başkandan daha tecrübeli olamaz (görev " + g + " ≥ başkan " + ctx.baskanGorevUst + ").";
+      if (rol === "akademik" && ctx.baskanGorevUst != null && g >= ctx.baskanGorevUst) {
+        return "Akademik üye, başkandan daha tecrübeli olamaz (görev " + g + " ≥ başkan " + ctx.baskanGorevUst + ").";
       }
     }
     return null;
@@ -371,7 +371,7 @@
         }
         // Tecrübe ve cinsiyet toplamları
         var g = gorevSayisi(row);
-        if (rol === "baskan") baskanGorev = g; else digerGorevMax = Math.max(digerGorevMax, g);
+        if (rol === "baskan") baskanGorev = g; else if (rol === "akademik") digerGorevMax = Math.max(digerGorevMax, g);
         var cg = TP.cinsiyetTahmin(row["Ad"]);
         if (cg === "K") cinsK++; else if (cg === "E") cinsE++;
         // Öğrenci değerlendiriciler "ilk kez görev" sayımına dahil edilmez
@@ -381,10 +381,10 @@
       });
     });
 
-    // Başkan diğer tüm üyelerden daha tecrübeli olmalı
+    // Başkan akademik üyelerden daha tecrübeli olmalı
     if (t.baskanEnTecrubeli && baskanGorev !== null && digerGorevMax >= 0 && baskanGorev <= digerGorevMax) {
-      uyarilar.push("Takım başkanı diğer üyelerden daha tecrübeli olmalı (başkan görev " + baskanGorev +
-        " ≤ en yüksek üye görevi " + digerGorevMax + ").");
+      uyarilar.push("Takım başkanı akademik üyelerden daha tecrübeli olmalı (başkan görev " + baskanGorev +
+        " ≤ en yüksek akademik üye görevi " + digerGorevMax + ").");
     }
     // Cinsiyet dengesi (ada göre tahmini; yumuşak kural)
     if (t.cinsiyetDenge && (cinsK + cinsE) > 0 && Math.abs(cinsK - cinsE) > 1) {
