@@ -1013,10 +1013,11 @@
       yedekHavuzu: T.yedekHavuzu, coi: T.coi
     };
     var ad = "takim-calismasi-" + new Date().toISOString().slice(0, 10) + ".json";
-    var blob = new Blob([JSON.stringify(veri, null, 2)], { type: "application/octet-stream" });
-    if (window.uiDownload) window.uiDownload(blob, ad);
+    var metin = JSON.stringify(veri, null, 2);
+    var blob = new Blob([metin], { type: "application/octet-stream" });
+    if (window.uiDownload) window.uiDownload(blob, ad, metin);
     else { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = ad; a.click(); }
-    bildir("Çalışma dosyası indirildi. Dosya kişisel veri (TcNo) içerir; güvenli saklayınız.", "ok");
+    bildir("Çalışma dosyası hazırlandı. Dosya kişisel veri (TcNo) içerir; güvenli saklayınız.", "ok");
   }
 
   function loadWork(file) {

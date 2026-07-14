@@ -76,14 +76,15 @@
   }
   window.uiConfirm = uiConfirm;
 
-  // Sandbox-dostu indirme. Artifact gibi sandbox iframe'lerde indirme
-  // özniteliği (a.download) engellendiğinden, iframe içindeyken blob yeni
-  // sekmede açılır (indirme oradan gerçekleşir). Doğrudan açıldığında
-  // (kendi sunucu/masaüstü) normal indirme kullanılır.
-  function uiDownload(data, filename) {
+  // Sandbox-dostu indirme.
+  // - Doğrudan açıldığında (kendi sunucu/masaüstü): normal a.download.
+  // - Sandbox iframe'de (Artifact): programlı indirme engellendiğinden,
+  //   kullanıcının bizzat tıklayacağı bir indirme penceresi açılır (gerçek
+  //   kullanıcı tıklaması, kısıtlı sandbox'ta indirmenin en güvenilir yolu).
+  //   metin verilmişse (JSON/CSV) ayrıca "Panoya kopyala" seçeneği sunulur.
+  function uiDownload(data, filename, metin) {
     var blob = data instanceof Blob ? data : new Blob([data], { type: "application/octet-stream" });
     var url = URL.createObjectURL(blob);
-    var temizle = function () { setTimeout(function () { URL.revokeObjectURL(url); }, 120000); };
     var iframede;
     try { iframede = window.self !== window.top; } catch (e) { iframede = true; }
 
@@ -91,37 +92,63 @@
       var a = document.createElement("a");
       a.href = url; a.download = filename; a.style.display = "none";
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      temizle();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 120000);
       return true;
     }
-    var w = window.open(url, "_blank");
-    if (w) { temizle(); return true; }
-    // Popup da engellendiyse: kullanıcıya elle indirme bağlantısı göster
-    downloadFallback(url, filename);
-    temizle();
+    downloadModal(url, filename, metin);
     return false;
   }
   window.uiDownload = uiDownload;
 
-  function downloadFallback(url, filename) {
+  function downloadModal(url, filename, metin) {
     var ov = document.createElement("div");
     ov.className = "modal";
-    ov.innerHTML = '<div class="modal-box confirm-box" role="dialog" aria-modal="true">' +
-      '<p>Önizleme ortamı otomatik indirmeyi kısıtlıyor. Dosyayı indirmek için bağlantıya tıklayın:</p>' +
-      '<div class="confirm-actions">' +
-      '<a class="btn btn-primary" href="' + url + '" download="' + esc(filename) + '" target="_blank" rel="noopener">' + esc(filename) + '</a>' +
-      '<button type="button" class="btn btn-ghost">Kapat</button></div></div>';
+    var kopyaBlok = metin
+      ? '<p class="hint" style="margin:14px 0 6px">İndirme çalışmazsa içeriği kopyalayıp bir dosyaya yapıştırabilirsiniz:</p>' +
+        '<textarea id="dl-metin" readonly style="width:100%;height:120px;font-family:monospace;font-size:12px;' +
+        'border:1px solid var(--line);border-radius:8px;padding:8px;resize:vertical"></textarea>'
+      : "";
+    ov.innerHTML = '<div class="modal-box confirm-box" role="dialog" aria-modal="true" style="max-width:520px">' +
+      '<p><strong>' + esc(filename) + '</strong></p>' +
+      '<p class="hint">Önizleme ortamı otomatik indirmeyi kısıtlayabilir. İndirmek için aşağıdaki bağlantıya tıklayın; ' +
+      'çalışmazsa "Yeni sekmede aç"ı deneyin.</p>' +
+      '<div class="confirm-actions" style="flex-wrap:wrap">' +
+      '<a id="dl-link" class="btn btn-primary" href="' + url + '" download="' + esc(filename) + '">İndir</a>' +
+      '<button type="button" id="dl-tab" class="btn btn-ghost">Yeni sekmede aç</button>' +
+      (metin ? '<button type="button" id="dl-copy" class="btn btn-ghost">Panoya kopyala</button>' : "") +
+      '<button type="button" id="dl-close" class="btn btn-ghost">Kapat</button></div>' +
+      kopyaBlok + "</div>";
     document.body.appendChild(ov);
-    function kapat() { if (ov.parentNode) document.body.removeChild(ov); }
-    ov.querySelector("button").addEventListener("click", kapat);
-    ov.querySelector("a").addEventListener("click", function () { setTimeout(kapat, 600); });
+    if (metin) ov.querySelector("#dl-metin").value = metin;
+
+    function kapat() { if (ov.parentNode) document.body.removeChild(ov); setTimeout(function () { URL.revokeObjectURL(url); }, 4000); }
+    ov.querySelector("#dl-close").addEventListener("click", kapat);
     ov.addEventListener("click", function (e) { if (e.target === ov) kapat(); });
+    ov.querySelector("#dl-tab").addEventListener("click", function () { window.open(url, "_blank"); });
+    if (metin) {
+      ov.querySelector("#dl-copy").addEventListener("click", function () {
+        var ta = ov.querySelector("#dl-metin");
+        ta.focus(); ta.select();
+        var ok = false;
+        try { ok = document.execCommand("copy"); } catch (e) { /* yoksay */ }
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(metin).catch(function () {});
+        var btn = ov.querySelector("#dl-copy");
+        btn.textContent = ok ? "Kopyalandı ✓" : "Metni seçin ve kopyalayın";
+      });
+    }
   }
 
-  // Bir SheetJS çalışma kitabını sandbox-dostu indirir.
+  // SheetJS çalışma kitabını CSV metnine çevirir (kopyalama yedeği için).
+  function wbToCsv(wb) {
+    return wb.SheetNames.map(function (ad) {
+      return "=== " + ad + " ===\n" + XLSX.utils.sheet_to_csv(wb.Sheets[ad]);
+    }).join("\n\n");
+  }
+
+  // Bir SheetJS çalışma kitabını sandbox-dostu indirir (CSV kopya yedeğiyle).
   function indirWorkbook(wb, filename) {
     var out = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    uiDownload(new Blob([out], { type: "application/octet-stream" }), filename);
+    uiDownload(new Blob([out], { type: "application/octet-stream" }), filename, wbToCsv(wb));
   }
   window.indirWorkbook = indirWorkbook;
 
@@ -252,7 +279,8 @@
     });
 
     $("btn-export-criteria").addEventListener("click", function () {
-      uiDownload(new Blob([JSON.stringify(state.criteria, null, 2)], { type: "application/octet-stream" }), "kriter-seti.json");
+      var metin = JSON.stringify(state.criteria, null, 2);
+      uiDownload(new Blob([metin], { type: "application/octet-stream" }), "kriter-seti.json", metin);
     });
 
     $("criteria-file").addEventListener("change", function (e) {
