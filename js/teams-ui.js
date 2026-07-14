@@ -333,11 +333,13 @@
       '<input type="file" id="kg-dosya" accept=".html,.htm,.txt,.mht,text/html,text/plain" hidden></label>' +
       '</div>' +
       '<p class="hint">İndirme önce doğrudan, olmazsa herkese açık CORS aracıları üzerinden denenir ' +
-      '(yalnızca herkese açık sayfa adresi iletilir). Hiçbiri erişemezse: yukarıdaki bağlantıyı açın, ' +
-      'sayfayı kaydedip yükleyin ya da sayfadaki listeyi seçip aşağıya yapıştırın.</p>' +
+      '(yalnızca herkese açık sayfa adresi iletilir). Hiçbiri erişemezse en hızlı yol: yukarıdaki ' +
+      'bağlantıyı açın, sayfada tümünü seçip kopyalayın (<kbd>Ctrl+A</kbd>, <kbd>Ctrl+C</kbd>) ve ' +
+      '<strong>Panodan al</strong>’a tıklayın — ya da sayfayı kaydedip yükleyin / içeriği aşağıya yapıştırın.</p>' +
       '<textarea id="kg-metin" class="kg-metin" rows="6" ' +
       'placeholder="… ya da MIS sayfasının içeriğini buraya yapıştırın"></textarea>' +
       '<div class="panel-actions">' +
+      '<button type="button" id="kg-pano" class="btn btn-ghost">Panodan al</button>' +
       '<button type="button" id="kg-cikar" class="btn btn-ghost">Yapıştırılan metinden çıkar</button>' +
       '</div>' +
       '<div id="kg-onizleme" class="kg-onizleme" hidden></div>' +
@@ -460,6 +462,25 @@
       okuyucu.onload = function () { onizle(String(okuyucu.result), dosya.name); };
       okuyucu.readAsText(dosya, "utf-8");
       e.target.value = "";
+    });
+
+    // MIS sayfasında Ctrl+A/Ctrl+C sonrası tek tık: pano içeriği okunur ve
+    // doğrudan önizlenir (tarayıcı ilk kullanımda pano izni isteyebilir).
+    ov.querySelector("#kg-pano").addEventListener("click", function () {
+      if (!navigator.clipboard || !navigator.clipboard.readText) {
+        bildir("Bu tarayıcı panodan okumaya izin vermiyor; içeriği kutuya elle yapıştırın.", "err");
+        return;
+      }
+      navigator.clipboard.readText().then(function (metin) {
+        if (!metin || !metin.trim()) {
+          bildir("Pano boş görünüyor. MIS sayfasında tümünü seçip kopyalayın (Ctrl+A, Ctrl+C).", "err");
+          return;
+        }
+        ov.querySelector("#kg-metin").value = metin;
+        onizle(metin, "panodan alınan içerik");
+      }, function () {
+        bildir("Panoya erişilemedi (izin verilmemiş olabilir); içeriği kutuya elle yapıştırın.", "err");
+      });
     });
 
     ov.querySelector("#kg-cikar").addEventListener("click", function () {
