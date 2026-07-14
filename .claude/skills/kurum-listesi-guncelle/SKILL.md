@@ -1,24 +1,23 @@
 ---
 name: kurum-listesi-guncelle
-description: Değerlendirilecek kurumlar listesini resmî kaynaklardan (YÖKAK MIS Common/Universities ya da YÖK Akademik universityListview.jsp) yeniden üretir. Kullanıcı "kurum listesini güncelle", "üniversite listesini YÖK'ten/MIS'ten çek/yenile" gibi bir istekte bulununca kullan.
+description: Değerlendirilecek kurumlar listesini YÖKAK MIS kurum listesinden (Common/Universities) yeniden üretir. Kullanıcı "kurum listesini güncelle", "üniversite listesini MIS'ten çek/yenile" gibi bir istekte bulununca kullan.
 ---
 
-# Kurum listesini YÖK'ten güncelleme
+# Kurum listesini YÖKAK MIS'ten güncelleme
 
 Uygulamanın "Değerlendirilecek Kurumlar" sekmesindeki liste `js/universities.js`
 içindeki gömülü `EMBEDDED` dizisinden gelir. Bu beceri, listeyi resmî kaynaktan
-yeniden üretir. Kaynaklar sırayla denenir (`Universities.KAYNAKLAR`):
+yeniden üretir. Kaynak (`Universities.KAYNAKLAR`):
 
-1. https://mis.yokak.gov.tr/Common/Universities (YÖKAK MIS; HTML ya da JSON —
-   ayrıştırıcı ikisini de işler)
-2. https://akademik.yok.gov.tr/AkademikArama/view/universityListview.jsp
+https://mis.yokak.gov.tr/Common/Universities (YÖKAK MIS; HTML ya da JSON —
+ayrıştırıcı ikisini de işler)
 
 ## Adımlar
 
 1. **Sayfayı edin.** Sırasıyla dene; ilk başarılı olanla devam et:
    - `node tools/update-universities.js --dry-run` — betik kaynakları sırayla
      kendisi indirmeyi dener ve farkları gösterir.
-   - Betik indiremezse (YÖK/YÖKAK sunucuları yurt dışı/veri merkezi IP'lerini
+   - Betik indiremezse (MIS yurt dışı/veri merkezi IP'lerini
      ve tanımadığı istemcileri 403 ile engelleyebilir) `WebFetch` ya da varsa
      bir MCP fetch aracıyla sayfayı almayı dene; içeriği bir dosyaya yazıp
      `--in` ile ver.
@@ -43,13 +42,13 @@ yeniden üretir. Kaynaklar sırayla denenir (`Universities.KAYNAKLAR`):
 
 ## Notlar
 
-- Aynı ayrıştırıcı (`Universities.parse`) uygulama arayüzündeki "YÖK
-  listesinden güncelle" penceresinde de çalışır; oradaki güncelleme yalnızca
+- Aynı ayrıştırıcı (`Universities.parse`) uygulama arayüzündeki "YÖKAK
+  MIS'ten güncelle" penceresinde de çalışır; oradaki güncelleme yalnızca
   kullanıcının tarayıcısına (localStorage) yazılır. Kalıcı, herkese dağıtılan
   güncelleme bu becerideki yoldur (gömülü listeyi değiştirir).
-- YÖK sayfası adları BÜYÜK harfle verir; ayrıştırıcı bilinen kurumların özenli
+- MIS sayfası adları BÜYÜK harfle verir; ayrıştırıcı bilinen kurumların özenli
   yazımını korur, yenilerini Türkçe başlık düzenine çevirir. Yeni bir kurumda
-  il/tür doğrulanamadıysa kayıt "Diğer"/"—" olarak eklenir — mümkünse YÖK
+  il/tür doğrulanamadıysa kayıt "Diğer"/"—" olarak eklenir — mümkünse MIS
   sayfasındaki bilgiden elle düzeltip öyle commit et.
 - `EMBEDDED_GUNCELLEME` alanını betik kendisi damgalar; elle düzenleme
   yaptıysan dokunma.

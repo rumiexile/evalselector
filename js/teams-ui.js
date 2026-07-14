@@ -278,8 +278,8 @@
     });
   }
 
-  // ---------------- Kurum listesi güncelleme (YÖK) ----------------
-  // Liste Universities.parse ile YÖK sayfasından ayrıştırılır; uygulanan liste
+  // ---------------- Kurum listesi güncelleme (YÖKAK MIS) ----------------
+  // Liste Universities.parse ile YÖKAK MIS sayfasından ayrıştırılır; uygulanan liste
   // localStorage'da tutulur (kişisel veri içermez). Aynı ayrıştırıcıyı
   // tools/update-universities.js komut satırında da kullanır.
   function renderKurumKaynak() {
@@ -287,14 +287,14 @@
     var n = Universities.UNIVERSITIES.length;
     var el = $("k-kaynak-bilgi");
     if (m.kaynak === "yok" && m.guncelleme) {
-      el.textContent = n + " kurum · YÖK listesinden güncellendi: " +
+      el.textContent = n + " kurum · YÖKAK MIS'ten güncellendi: " +
         new Date(m.guncelleme).toLocaleString("tr-TR", { dateStyle: "medium", timeStyle: "short" }) +
         ". Eksik kurumları elle ekleyebilirsiniz.";
     } else {
       el.textContent = n + " kurum · gömülü liste" +
-        (m.guncelleme ? " (YÖK kaynağından üretim: " +
+        (m.guncelleme ? " (YÖKAK MIS'ten üretim: " +
           new Date(m.guncelleme).toLocaleDateString("tr-TR") + ")" : "") +
-        " — güncel YÖK listesiyle küçük farklar olabilir; \"YÖK listesinden güncelle\" ile yenileyebilirsiniz.";
+        " — güncel YÖKAK MIS listesiyle küçük farklar olabilir; \"YÖKAK MIS'ten güncelle\" ile yenileyebilirsiniz.";
     }
     $("btn-kurum-gomulu").style.display = m.kaynak === "yok" ? "" : "none";
   }
@@ -323,7 +323,7 @@
     ov.innerHTML =
       '<div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="kg-baslik">' +
       '<button type="button" class="modal-close" id="kg-kapat" aria-label="Kapat">×</button>' +
-      '<h3 id="kg-baslik">Kurum listesini YÖK’ten güncelle</h3>' +
+      '<h3 id="kg-baslik">Kurum listesini YÖKAK MIS’ten güncelle</h3>' +
       '<p class="hint">Kaynaklar: ' + Universities.KAYNAKLAR.map(function (k) {
         return '<a href="' + esc(k.url) + '" target="_blank" rel="noopener">' + esc(k.ad) + "</a>";
       }).join(" · ") + "</p>" +
@@ -336,7 +336,7 @@
       '(yalnızca herkese açık sayfa adresi iletilir). Hiçbiri erişemezse: yukarıdaki bağlantıyı açın, ' +
       'sayfayı kaydedip yükleyin ya da sayfadaki listeyi seçip aşağıya yapıştırın.</p>' +
       '<textarea id="kg-metin" class="kg-metin" rows="6" ' +
-      'placeholder="… ya da YÖK sayfasının içeriğini buraya yapıştırın"></textarea>' +
+      'placeholder="… ya da MIS sayfasının içeriğini buraya yapıştırın"></textarea>' +
       '<div class="panel-actions">' +
       '<button type="button" id="kg-cikar" class="btn btn-ghost">Yapıştırılan metinden çıkar</button>' +
       '</div>' +
@@ -385,10 +385,10 @@
       ov.querySelector("#kg-uygula").disabled = false;
     }
 
-    // Sunucular CORS başlığı göndermediğinde doğrudan istek engellenir; her
-    // kaynak (MIS, YÖK Akademik) önce doğrudan, sonra herkese açık CORS
-    // aracıları üzerinden denenir (aracıya yalnızca herkese açık liste
-    // sayfasının adresi iletilir, kişisel veri gönderilmez). İlk başaran kazanır.
+    // Sunucu CORS başlığı göndermediğinde doğrudan istek engellenir; kaynak
+    // (YÖKAK MIS) önce doğrudan, sonra herkese açık CORS aracıları üzerinden
+    // denenir (aracıya yalnızca herkese açık liste sayfasının adresi iletilir,
+    // kişisel veri gönderilmez). İlk başaran kazanır.
     var ARACILAR = [
       { ad: "doğrudan", sar: function (u) { return u; } },
       { ad: "allorigins", sar: function (u) { return "https://api.allorigins.win/raw?url=" + encodeURIComponent(u); } },
@@ -425,7 +425,7 @@
           dugme.disabled = false;
           kutu.innerHTML = '<p class="hint">İndirme başarısız (denenen yollar: ' +
             esc(denenen.join("; ")) +
-            "). YÖK sunucusu tarayıcıdan ve aracılardan erişime izin vermiyor. " +
+            "). MIS sunucusu tarayıcıdan ve aracılardan erişime izin vermiyor. " +
             "Lütfen sayfayı bağlantıdan açıp kaydedin ve dosya olarak yükleyin ya da içeriği yapıştırın.</p>";
           return;
         }
@@ -504,7 +504,7 @@
       kurumGuncelleModal().hidden = false;
     });
     $("btn-kurum-gomulu").addEventListener("click", function () {
-      onay("YÖK'ten güncellenen liste silinip uygulamayla gelen gömülü listeye dönülecek. Onaylıyor musunuz?",
+      onay("YÖKAK MIS'ten güncellenen liste silinip uygulamayla gelen gömülü listeye dönülecek. Onaylıyor musunuz?",
         { onayEtiket: "Gömülü listeye dön" }).then(function (ok) {
           if (!ok) return;
           Universities.reset();

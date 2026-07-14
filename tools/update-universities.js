@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /*
  * update-universities.js — js/universities.js içindeki gömülü kurum listesini
- * YÖK Akademik'in üniversite listesi sayfasından yeniden üretir.
+ * YÖKAK MIS kurum listesinden (Common/Universities) yeniden üretir.
  *
  * Kullanım:
  *   node tools/update-universities.js                # sayfayı indir + dosyayı güncelle
@@ -9,7 +9,7 @@
  *   node tools/update-universities.js --dry-run      # yazmadan farkları göster
  *   node tools/update-universities.js --force        # kısa liste uyarısını yok say
  *
- * Not: akademik.yok.gov.tr yurt dışı/veri merkezi IP'lerini engelleyebilir.
+ * Not: mis.yokak.gov.tr yurt dışı/veri merkezi IP'lerini engelleyebilir.
  * İndirme başarısız olursa sayfayı tarayıcıda açıp "Sayfayı farklı kaydet"
  * ile .html olarak kaydedin ve --in ile verin. Aynı ayrıştırıcı uygulama
  * arayüzündeki "YÖK listesinden güncelle" penceresinde de kullanılır.
@@ -79,7 +79,7 @@ function blokUret(kurumlar, tarih) {
   return satirlar.join("\n");
 }
 
-// Kaynakları sırayla dener (MIS, YÖK Akademik); ilk erişilebilen kullanılır
+// Kaynakları sırayla dener (Universities.KAYNAKLAR); ilk erişilebilen kullanılır
 function kaynaklardanIndir(kaynaklar, i) {
   if (i >= kaynaklar.length) {
     console.error("Hiçbir kaynak indirilemedi. Sayfayı tarayıcıda açıp .html");

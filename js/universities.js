@@ -1,7 +1,7 @@
 /*
  * universities.js — Türkiye'deki yükseköğretim kurumları listesi.
- * Gömülü liste çevrimdışı yedektir; güncel liste resmî kaynaklardan (KAYNAKLAR:
- * YÖKAK MIS ya da YÖK Akademik) güncellenebilir:
+ * Gömülü liste çevrimdışı yedektir; güncel liste YÖKAK MIS'in kurum
+ * listesinden (KAYNAKLAR) güncellenebilir:
  *   - Arayüzden: "YÖK listesinden güncelle" (sayfa doğrudan indirilir ya da
  *     içeriği yapıştırılır, parse() ayrıştırır, apply() localStorage'a yazar).
  *   - Komut satırından / MCP oturumunda: `node tools/update-universities.js`
@@ -11,13 +11,11 @@
 (function (root) {
   "use strict";
 
-  // Güncelleme kaynakları; sırayla denenir. MIS, YÖKAK'ın kendi alanı olduğu
-  // için ilk sıradadır (aynı alandan/ağdan çalıştırıldığında CORS'a takılmaz).
+  // Güncelleme kaynakları; sırayla denenir. Tek resmî kaynak YÖKAK MIS'tir
+  // (YÖKAK'ın kendi alanı; aynı alandan/ağdan çalıştırıldığında CORS'a takılmaz).
   var KAYNAKLAR = [
-    { ad: "YÖKAK MIS", url: "https://mis.yokak.gov.tr/Common/Universities" },
-    { ad: "YÖK Akademik", url: "https://akademik.yok.gov.tr/AkademikArama/view/universityListview.jsp" }
+    { ad: "YÖKAK MIS", url: "https://mis.yokak.gov.tr/Common/Universities" }
   ];
-  var KAYNAK_URL = KAYNAKLAR[1].url; // geriye dönük uyumluluk (araç/testler)
   var LS_KEY = "evalselector.universities.v1";
 
   function U(ad, il, tur) { return { ad: ad, il: il, tur: tur }; }
@@ -528,7 +526,6 @@
     COUNTRIES: COUNTRIES,
     EMBEDDED: EMBEDDED,
     KAYNAKLAR: KAYNAKLAR,
-    KAYNAK_URL: KAYNAK_URL,
     meta: function () { return META; },
     parse: parseKurumListesi,
     setList: setList,

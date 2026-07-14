@@ -32,12 +32,11 @@ Kurulum gerektirmez:
    zorunluluğu, başkan görev kriteri, UKAP için asgari dil puanı, ilk kez
    görev alacak üye aralığı, yedek havuzu (rol başına kişi sayısı).
 3. Kurum listesinden değerlendirilecek üniversiteleri seçin (eksik kurumlar
-   elle eklenebilir). Liste gömülü kopyayla gelir; **"YÖK listesinden
-   güncelle"** ile [YÖKAK MIS](https://mis.yokak.gov.tr/Common/Universities)
-   ya da [YÖK Akademik](https://akademik.yok.gov.tr/AkademikArama/view/universityListview.jsp)
-   listesinden yenilenebilir (doğrudan ve CORS aracılı indirme sırayla
-   denenir; olmazsa kaydedilmiş sayfa yüklenir ya da içerik yapıştırılır;
-   güncel liste tarayıcıda saklanır).
+   elle eklenebilir). Liste gömülü kopyayla gelir; **"YÖKAK MIS'ten
+   güncelle"** ile [YÖKAK MIS kurum listesinden](https://mis.yokak.gov.tr/Common/Universities)
+   yenilenebilir (doğrudan ve CORS aracılı indirme sırayla denenir; olmazsa
+   kaydedilmiş sayfa yüklenir ya da içerik yapıştırılır; güncel liste
+   tarayıcıda saklanır).
 4. **"Eksik takımları otomatik kur (rastlantısal)"** ile asil kadroları kurun.
    Türe bağlı **Yedek Havuzu** kartında **"Havuzu oluştur/güncelle"** ile
    yedekleri hazırlayın. Bir üyeyi **Değiştir** ile değiştirdiğinizde önce
@@ -73,7 +72,7 @@ node test/teams.test.js         # takım kurma kuralları
 node test/universities.test.js  # YÖK kurum listesi ayrıştırıcısı
 ```
 
-Gömülü kurum listesi YÖK Akademik'ten yeniden üretilebilir:
+Gömülü kurum listesi YÖKAK MIS'ten yeniden üretilebilir:
 
 ```bash
 node tools/update-universities.js            # sayfayı indir + js/universities.js'i güncelle

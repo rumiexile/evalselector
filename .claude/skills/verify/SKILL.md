@@ -32,9 +32,9 @@ const browser = await chromium.launch({
 - Takım modülüne geçiş: `.modtab[data-mod="takim"]` tıkla.
 - Kurum listesi: arama `#k-arama`, satırlar `#kurum-liste label`,
   seçim sayacı `#k-secili-sayi`, kaynak satırı `#k-kaynak-bilgi`.
-- YÖK güncelleme penceresi: `#btn-kurum-guncelle` → `#kurum-guncelle-modal`;
+- YÖKAK MIS güncelleme penceresi: `#btn-kurum-guncelle` → `#kurum-guncelle-modal`;
   içerik `#kg-metin`e yapıştırılıp `#kg-cikar` → önizleme `#kg-onizleme` →
-  `#kg-uygula`. Sentetik YÖK sayfası üretmek için `Universities.EMBEDDED`'dan
+  `#kg-uygula`. Sentetik MIS sayfası üretmek için `Universities.EMBEDDED`'dan
   `<tr><td>AD</td><td>İL</td><td>TÜR</td></tr>` satırları yeterli.
 - Onay pencereleri `#confirm-modal` (`#confirm-ok`/`#confirm-cancel`).
 - Bildirimler `#toast` içinde görünür.
