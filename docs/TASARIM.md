@@ -228,6 +228,28 @@ değerlendirmeler için ülke listesinden seçilir) ve tür. Eklenenler tarayıc
 saklanır; Türkiye dışındaki kurumlarda ülke adı listede ve takım kartında
 gösterilir. Bir kurum seçimden çıkarılırsa kurulmuş takımı da kaldırılır.
 
+**Listeyi YÖK'ten güncelleme.** Kurum listesi resmî kaynaktan
+(<https://akademik.yok.gov.tr/AkademikArama/view/universityListview.jsp>)
+iki yolla yenilenebilir:
+
+1. **Uygulama içi** — "YÖK listesinden güncelle" penceresi: kullanıcı YÖK
+   sayfasındaki listeyi kopyalayıp yapıştırır ya da kaydedilmiş `.html`
+   dosyasını yükler (JSON da kabul edilir). `js/uniparse.js` içerikten kurum
+   adı, şehir ve türü toleranslı biçimde ayrıştırır (HTML/sekmeli metin/JSON;
+   TAMAMEN BÜYÜK adlar Türkçe kurallarla başlık yazımına çevrilir, bilinen
+   kurumların özenli yazımı ve eksik alanları gömülü listeden devralınır).
+   Önizlemede yeni/çıkan kurum sayısı ve uyarılar gösterilir; onaylanan liste
+   tarayıcı deposunda gömülü listeden ayrı saklanır ve "Gömülü listeye dön"
+   ile geri alınabilir. Uygulama tarayıcı dışına veri göndermediğinden ve YÖK
+   sayfası CORS başlığı sunmadığından sayfa uygulama içinden **doğrudan
+   çekilemez**; bu tasarım bilinçlidir (KVKK/çevrimdışı çalışma).
+2. **Geliştirme tarafı (MCP/Claude oturumu ya da yerel makine)** —
+   `node tools/update-universities.mjs` sayfayı indirip gömülü listeyi
+   (`js/universities.js`) yeniden üretir; `--dry-run` yalnızca farkı gösterir,
+   `--file sayfa.html` kaydedilmiş sayfadan çalışır. Ağ erişimi kapalı uzak
+   ortamlarda `akademik.yok.gov.tr` alan adının ortam ağ politikasında izinli
+   olması gerekir.
+
 ### 9.3 Takım kurulumu, yedek havuzu ve değiştirme
 
 Takımlar yalnızca **asil** kadrodan oluşur. Yedekler takım bazında değil,
@@ -287,7 +309,8 @@ kurumlar) tarayıcıda saklanır.
   otomatik gözetilemez; coğrafi/alan dengesi "aynı üniversiteden tek üye"
   kuralıyla yaklaşık sağlanır.
 - Gömülü üniversite listesi güncel YÖK listesinden küçük farklar içerebilir;
-  elle ekleme ile telafi edilir.
+  "YÖK listesinden güncelle" penceresi, `tools/update-universities.mjs` aracı
+  ya da elle ekleme ile telafi edilir.
 - Sektör temsilcisi ve uluslararası uzman rolleri (8/3'te isteğe bağlı)
   ayrı rol olarak modellenmemiştir; gerekirse akademik koltuk + elle seçim
   ile yönetilebilir ya da ileride rol olarak eklenebilir.

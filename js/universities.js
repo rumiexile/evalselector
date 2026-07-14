@@ -37,10 +37,10 @@
     U("Alanya Alaaddin Keykubat Üniversitesi", "Antalya", "Devlet"),
     U("Amasya Üniversitesi", "Amasya", "Devlet"),
     U("Anadolu Üniversitesi", "Eskişehir", "Devlet"),
-    U("Ankara Üniversitesi", "Ankara", "Devlet"),
     U("Ankara Hacı Bayram Veli Üniversitesi", "Ankara", "Devlet"),
     U("Ankara Müzik ve Güzel Sanatlar Üniversitesi", "Ankara", "Devlet"),
     U("Ankara Sosyal Bilimler Üniversitesi", "Ankara", "Devlet"),
+    U("Ankara Üniversitesi", "Ankara", "Devlet"),
     U("Ankara Yıldırım Beyazıt Üniversitesi", "Ankara", "Devlet"),
     U("Ardahan Üniversitesi", "Ardahan", "Devlet"),
     U("Artvin Çoruh Üniversitesi", "Artvin", "Devlet"),
@@ -74,8 +74,8 @@
     U("Fırat Üniversitesi", "Elazığ", "Devlet"),
     U("Galatasaray Üniversitesi", "İstanbul", "Devlet"),
     U("Gazi Üniversitesi", "Ankara", "Devlet"),
-    U("Gaziantep Üniversitesi", "Gaziantep", "Devlet"),
     U("Gaziantep İslam Bilim ve Teknoloji Üniversitesi", "Gaziantep", "Devlet"),
+    U("Gaziantep Üniversitesi", "Gaziantep", "Devlet"),
     U("Gebze Teknik Üniversitesi", "Kocaeli", "Devlet"),
     U("Giresun Üniversitesi", "Giresun", "Devlet"),
     U("Gümüşhane Üniversitesi", "Gümüşhane", "Devlet"),
@@ -88,10 +88,10 @@
     U("Isparta Uygulamalı Bilimler Üniversitesi", "Isparta", "Devlet"),
     U("İnönü Üniversitesi", "Malatya", "Devlet"),
     U("İskenderun Teknik Üniversitesi", "Hatay", "Devlet"),
-    U("İstanbul Üniversitesi", "İstanbul", "Devlet"),
-    U("İstanbul Üniversitesi-Cerrahpaşa", "İstanbul", "Devlet"),
     U("İstanbul Medeniyet Üniversitesi", "İstanbul", "Devlet"),
     U("İstanbul Teknik Üniversitesi", "İstanbul", "Devlet"),
+    U("İstanbul Üniversitesi", "İstanbul", "Devlet"),
+    U("İstanbul Üniversitesi-Cerrahpaşa", "İstanbul", "Devlet"),
     U("İzmir Bakırçay Üniversitesi", "İzmir", "Devlet"),
     U("İzmir Demokrasi Üniversitesi", "İzmir", "Devlet"),
     U("İzmir Kâtip Çelebi Üniversitesi", "İzmir", "Devlet"),
@@ -131,8 +131,8 @@
     U("Pamukkale Üniversitesi", "Denizli", "Devlet"),
     U("Recep Tayyip Erdoğan Üniversitesi", "Rize", "Devlet"),
     U("Sağlık Bilimleri Üniversitesi", "İstanbul", "Devlet"),
-    U("Sakarya Üniversitesi", "Sakarya", "Devlet"),
     U("Sakarya Uygulamalı Bilimler Üniversitesi", "Sakarya", "Devlet"),
+    U("Sakarya Üniversitesi", "Sakarya", "Devlet"),
     U("Samsun Üniversitesi", "Samsun", "Devlet"),
     U("Selçuk Üniversitesi", "Konya", "Devlet"),
     U("Siirt Üniversitesi", "Siirt", "Devlet"),
@@ -153,7 +153,6 @@
     U("Yıldız Teknik Üniversitesi", "İstanbul", "Devlet"),
     U("Yozgat Bozok Üniversitesi", "Yozgat", "Devlet"),
     U("Zonguldak Bülent Ecevit Üniversitesi", "Zonguldak", "Devlet"),
-
     // ---- Vakıf üniversiteleri ----
     U("Acıbadem Mehmet Ali Aydınlar Üniversitesi", "İstanbul", "Vakıf"),
     U("Alanya Üniversitesi", "Antalya", "Vakıf"),
@@ -204,8 +203,8 @@
     U("İzmir Tınaztepe Üniversitesi", "İzmir", "Vakıf"),
     U("Kadir Has Üniversitesi", "İstanbul", "Vakıf"),
     U("Kapadokya Üniversitesi", "Nevşehir", "Vakıf"),
-    U("Koç Üniversitesi", "İstanbul", "Vakıf"),
     U("Kocaeli Sağlık ve Teknoloji Üniversitesi", "Kocaeli", "Vakıf"),
+    U("Koç Üniversitesi", "İstanbul", "Vakıf"),
     U("Konya Gıda ve Tarım Üniversitesi", "Konya", "Vakıf"),
     U("KTO Karatay Üniversitesi", "Konya", "Vakıf"),
     U("Lokman Hekim Üniversitesi", "Ankara", "Vakıf"),
@@ -230,7 +229,48 @@
     U("Yüksek İhtisas Üniversitesi", "Ankara", "Vakıf")
   ];
 
-  var api = { UNIVERSITIES: UNIVERSITIES, COUNTRIES: COUNTRIES };
+  // ---- Liste güncelleme (YÖK listesinden içe aktarım) --------------------
+  // Gömülü liste her zaman korunur; içe aktarılan güncel liste tarayıcı
+  // deposunda ayrı tutulur ve aktifListe() ile öncelik kazanır.
+  var LS_KEY = "evalselector.kurumlar.v1";
+  var override = null; // { liste, kaynak, tarih }
+
+  function lsOku() {
+    try {
+      if (typeof localStorage === "undefined") return;
+      var raw = localStorage.getItem(LS_KEY);
+      if (!raw) return;
+      var v = JSON.parse(raw);
+      if (v && Array.isArray(v.liste) && v.liste.length) override = v;
+    } catch (e) { /* bozuk kayıt yoksayılır */ }
+  }
+  lsOku();
+
+  function aktifListe() {
+    return override ? override.liste : UNIVERSITIES;
+  }
+  function setListe(liste, kaynak) {
+    override = { liste: liste, kaynak: kaynak || "içe aktarım", tarih: new Date().toISOString() };
+    try {
+      if (typeof localStorage !== "undefined") localStorage.setItem(LS_KEY, JSON.stringify(override));
+    } catch (e) { /* depolama dolu/kapalı olabilir; bellek içi sürdürülür */ }
+  }
+  function resetListe() {
+    override = null;
+    try {
+      if (typeof localStorage !== "undefined") localStorage.removeItem(LS_KEY);
+    } catch (e) { /* yoksay */ }
+  }
+  function listeDurumu() {
+    return override
+      ? { kaynak: override.kaynak, tarih: override.tarih, sayi: override.liste.length, gomulu: false }
+      : { kaynak: "gömülü liste", tarih: null, sayi: UNIVERSITIES.length, gomulu: true };
+  }
+
+  var api = {
+    UNIVERSITIES: UNIVERSITIES, COUNTRIES: COUNTRIES,
+    aktifListe: aktifListe, setListe: setListe, resetListe: resetListe, listeDurumu: listeDurumu
+  };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.Universities = api;
 })(typeof self !== "undefined" ? self : this);

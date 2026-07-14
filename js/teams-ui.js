@@ -173,7 +173,7 @@
 
   // ---------------- Kurumlar ----------------
   function tumKurumlar() {
-    return Universities.UNIVERSITIES.concat(T.ekKurumlar);
+    return Universities.aktifListe().concat(T.ekKurumlar);
   }
   function kurumBilgi(ad) {
     var n = TextParse.norm(ad);
@@ -224,7 +224,7 @@
         lbl.appendChild(document.createTextNode(" " + k.ad));
         var span = document.createElement("span");
         span.className = "hint";
-        span.textContent = " — " + yerBilgisi(k) + " · " + k.tur;
+        span.textContent = " — " + yerBilgisi(k) + " · " + (k.tur || "tür?");
         lbl.appendChild(span);
         div.appendChild(lbl);
       });
@@ -259,9 +259,140 @@
     });
   }
 
+  // Kurum listesi kaynağı (gömülü / YÖK içe aktarımı) durum satırı
+  function renderKurumDurum() {
+    var el = $("kurum-liste-durum");
+    if (!el) return;
+    var d = Universities.listeDurumu();
+    if (d.gomulu) {
+      el.textContent = "Kaynak: gömülü liste (" + d.sayi + " kurum). Güncel YÖK listesiyle küçük farklar olabilir — " +
+        "“YÖK listesinden güncelle” ile yenileyebilir, eksik kurumları elle ekleyebilirsiniz.";
+    } else {
+      var t = d.tarih ? new Date(d.tarih).toLocaleDateString("tr-TR") : "";
+      el.textContent = "Kaynak: " + d.kaynak + (t ? " — " + t : "") + " (" + d.sayi + " kurum).";
+    }
+  }
+
+  // ---- YÖK listesinden güncelleme penceresi ----
+  var YOK_URL = "https://akademik.yok.gov.tr/AkademikArama/view/universityListview.jsp";
+
+  function openKurumGuncelle() {
+    var d = Universities.listeDurumu();
+    var html =
+      '<h3>Kurum listesini YÖK’ten güncelle</h3>' +
+      '<p class="hint">Uygulama tarayıcı dışına veri göndermez; YÖK sayfası da tarayıcı güvenlik ' +
+      'kuralları (CORS) nedeniyle uygulama içinden doğrudan çekilemez. Liste iki adımda güncellenir:</p>' +
+      '<ol class="hint" style="padding-left:1.2em">' +
+      '<li>YÖK Akademik üniversite listesini tarayıcınızda açın:<br><code>' + YOK_URL + '</code></li>' +
+      '<li>Sayfadaki listeyi seçip kopyalayın ve aşağıya yapıştırın; ya da sayfayı kaydedip ' +
+      '(Ctrl+S) .html dosyası olarak yükleyin. JSON dışa aktarımı da kabul edilir.</li></ol>' +
+      '<textarea id="kg-metin" rows="7" style="width:100%" placeholder="YÖK sayfasından kopyalanan listeyi buraya yapıştırın…"></textarea>' +
+      '<div class="table-toolbar">' +
+      '<label class="btn btn-ghost btn-file">Dosya yükle (.html / .txt / .json)' +
+      '<input type="file" id="kg-dosya" accept=".html,.htm,.txt,.json" hidden></label>' +
+      '<button id="kg-onizle" type="button" class="btn btn-ghost">Önizle</button>' +
+      '</div>' +
+      '<div id="kg-ozet" class="column-report"></div>' +
+      '<div class="panel-actions">' +
+      '<button id="kg-uygula" type="button" class="btn btn-primary" disabled>Listeyi uygula</button>' +
+      (d.gomulu ? '' : '<button id="kg-gomulu" type="button" class="btn btn-ghost">Gömülü listeye dön</button>') +
+      '</div>';
+    $("modal-body").innerHTML = html;
+    $("modal").hidden = false;
+
+    var bekleyen = null; // önizlenen liste
+
+    function onizle(metin) {
+      var mevcut = Universities.UNIVERSITIES.concat(Universities.aktifListe());
+      var sonuc = UniParse.parseListe(metin, mevcut);
+      var ozet = $("kg-ozet");
+      if (!sonuc.liste.length) {
+        ozet.innerHTML = "";
+        ozet.appendChild(uyariSatiri("Kurum bulunamadı. Yapıştırılan içerikte üniversite adları olduğundan emin olun.", "err"));
+        bekleyen = null; $("kg-uygula").disabled = true;
+        return;
+      }
+      var aktifAdlar = new Set(Universities.aktifListe().map(function (k) { return TextParse.norm(k.ad); }));
+      var yeniAdlar = new Set(sonuc.liste.map(function (k) { return TextParse.norm(k.ad); }));
+      var yeni = sonuc.liste.filter(function (k) { return !aktifAdlar.has(TextParse.norm(k.ad)); });
+      var cikan = Universities.aktifListe().filter(function (k) { return !yeniAdlar.has(TextParse.norm(k.ad)); });
+      var seciliKayip = T.seciliKurumlar.filter(function (ad) {
+        return !yeniAdlar.has(TextParse.norm(ad)) &&
+               !T.ekKurumlar.some(function (k) { return TextParse.norm(k.ad) === TextParse.norm(ad); });
+      });
+      ozet.innerHTML = "";
+      ozet.appendChild(uyariSatiri(sonuc.liste.length + " kurum bulundu — mevcut listeye göre " +
+        yeni.length + " yeni, " + cikan.length + " çıkarılacak.", "ok"));
+      if (sonuc.liste.length < 50) {
+        ozet.appendChild(uyariSatiri("Beklenenden az kurum bulundu (" + sonuc.liste.length +
+          "); tüm listeyi kopyaladığınızdan emin olun. Uygulanırsa liste tamamen bu içerikle değişir.", "err"));
+      }
+      sonuc.uyarilar.forEach(function (u) { ozet.appendChild(uyariSatiri(u, "")); });
+      if (seciliKayip.length) {
+        ozet.appendChild(uyariSatiri("Seçili " + seciliKayip.length + " kurum yeni listede yok (" +
+          seciliKayip.slice(0, 3).join(", ") + (seciliKayip.length > 3 ? "…" : "") +
+          "); seçimleri ve takımları korunur.", ""));
+      }
+      if (yeni.length) {
+        ozet.appendChild(uyariSatiri("Yeni: " + yeni.slice(0, 5).map(function (k) { return k.ad; }).join(", ") +
+          (yeni.length > 5 ? " … (+" + (yeni.length - 5) + ")" : ""), ""));
+      }
+      bekleyen = sonuc.liste;
+      $("kg-uygula").disabled = false;
+    }
+
+    function uyariSatiri(metin, tur) {
+      var p = document.createElement("p");
+      p.className = "hint" + (tur === "err" ? " uyari" : "");
+      p.textContent = (tur === "ok" ? "✔ " : tur === "err" ? "⚠ " : "• ") + metin;
+      return p;
+    }
+
+    $("kg-onizle").addEventListener("click", function () {
+      onizle($("kg-metin").value);
+    });
+    $("kg-dosya").addEventListener("change", function () {
+      var f = this.files && this.files[0];
+      if (!f) return;
+      var fr = new FileReader();
+      fr.onload = function () {
+        var metin = "";
+        try {
+          metin = new TextDecoder("utf-8").decode(fr.result);
+          // Eski kodlamayla (windows-1254) kaydedilmiş sayfalar için geri dönüş
+          if ((metin.match(/\uFFFD/g) || []).length > 5) {
+            metin = new TextDecoder("windows-1254").decode(fr.result);
+          }
+        } catch (e) { metin = ""; }
+        $("kg-metin").value = metin.length > 400000 ? metin.slice(0, 400000) : metin;
+        onizle(metin);
+      };
+      fr.readAsArrayBuffer(f);
+    });
+    $("kg-uygula").addEventListener("click", function () {
+      if (!bekleyen) return;
+      Universities.setListe(bekleyen, "YÖK listesi içe aktarımı");
+      $("modal").hidden = true;
+      renderKurumlar(); renderCoiKurumListesi(); renderTakimlar(); renderKurumDurum();
+      bildir("Kurum listesi güncellendi: " + bekleyen.length + " kurum.", "ok");
+    });
+    var geri = $("kg-gomulu");
+    if (geri) geri.addEventListener("click", function () {
+      onay("Kurum listesi gömülü (uygulamayla gelen) listeye döndürülecek. Onaylıyor musunuz?",
+        { onayEtiket: "Gömülü listeye dön" }).then(function (ok) {
+        if (!ok) return;
+        Universities.resetListe();
+        $("modal").hidden = true;
+        renderKurumlar(); renderCoiKurumListesi(); renderTakimlar(); renderKurumDurum();
+        bildir("Gömülü kurum listesine dönüldü.", "ok");
+      });
+    });
+  }
+
   function bindKurumlar() {
     $("k-arama").addEventListener("input", renderKurumlar);
     $("k-tur-filtre").addEventListener("change", renderKurumlar);
+    $("btn-kurum-guncelle").addEventListener("click", openKurumGuncelle);
     $("btn-kurum-ekle").addEventListener("click", function () {
       var ad = $("k-yeni-ad").value.trim();
       if (!ad) { bildir("Kurum adı boş olamaz.", "err"); return; }
@@ -1131,6 +1262,7 @@
     renderTur();
     renderUlkeSecenekleri();
     renderKurumlar();
+    renderKurumDurum();
     renderCoiKurumListesi();
     renderTakimlar();
     document.addEventListener("pool-updated", function () {
