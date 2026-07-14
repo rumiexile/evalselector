@@ -175,6 +175,28 @@
     return isFinite(num) && num >= 0 ? num : null;
   }
 
+  // ---- İsimden cinsiyet tahmini (yalnızca kesin cinsiyetli yaygın adlar) ----
+  // Dönen değer: "K" (kadın) | "E" (erkek) | "?" (belirsiz). Tahmindir; unisex
+  // ve tanınmayan adlar "?" sayılır — resmî gösterge değildir.
+  var KADIN = ("Ayşe Fatma Emine Hatice Zeynep Elif Meryem Şeyma Merve Selin Pınar Gülay Nurcan Ceren Aslı " +
+    "Büşra Ebru Derya Nesrin Tuğba Yasemin Gamze Esra Melis Dilek Sibel Nilüfer Handan Gizem Sevgi Sevil " +
+    "Hülya Şule Aysun Aynur Filiz Gül Gülşah Havva İpek Kübra Leyla Melek Nazlı Özlem Rabia Sena Songül " +
+    "Tuba Yeliz Zehra Betül Cansu Damla Duygu Ecem Eda Hande İlknur Rana Sıla Simge Şevval Tülay Yağmur Fadime").split(/\s+/);
+  var ERKEK = ("Ahmet Mehmet Mustafa Ali Hüseyin Hasan İbrahim Osman Yusuf Murat Ömer Emre Burak Kemal Serkan " +
+    "Okan Hakan Kaan Onur Volkan Cem Barış Furkan Selim Erdem Tolga Uğur Sinan Levent Abdullah Adem Bekir " +
+    "Bülent Cihan Ekrem Enes Ercan Erhan Erkan Ertuğrul Fatih Ferhat Gökhan Halil Harun İsmail Kadir Koray " +
+    "Metin Nuri Oğuz Orhan Ramazan Recep Süleyman Tarık Taner Turgut Yavuz Zeki Alper Arda Batuhan Berkay " +
+    "Bora Doruk Efe Ege Eren Kerem Mert Poyraz Yiğit Serhat Serdar").split(/\s+/);
+  var _cinsIndex = null;
+  function cinsiyetTahmin(ad) {
+    if (!_cinsIndex) {
+      _cinsIndex = {};
+      KADIN.forEach(function (n) { _cinsIndex[norm(n)] = "K"; });
+      ERKEK.forEach(function (n) { _cinsIndex[norm(n)] = "E"; });
+    }
+    return _cinsIndex[norm(ad).split(" ")[0]] || "?";
+  }
+
   var api = {
     norm: norm,
     isBlank: isBlank,
@@ -184,6 +206,7 @@
     parseOgrenim: parseOgrenim,
     parseTecrube: parseTecrube,
     parseSayi: parseSayi,
+    cinsiyetTahmin: cinsiyetTahmin,
     TECRUBE_KELIMELERI: TECRUBE_KELIMELERI
   };
 

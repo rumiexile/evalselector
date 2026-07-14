@@ -158,5 +158,68 @@ cokYeni.asil.idari = "7"; cokYeni.asil.ogrenci = "8"; // 4, 5, 7 yeni (öğrenci
 const v2 = Teams.validateTeam(cokYeni, havuz, {});
 check("doğrulama: maxYeni aşımı", v2.some(x => x.indexOf("fazla") !== -1), v2);
 
+// ---- Yeni kriterler ----
+
+// 1) Başkan Prof. Dr. olmalı
+const docBaskan = { "TcNo": "d1", "Ad": "X", "Soyad": "Y", "Universite": "Z Üni", "Tip": "Akademik",
+  "AkademikUnvan": "Doç. Dr.", "TkBsk": 5, "AkdGor": 5, "IdrGor": 0 };
+check("başkan: Prof değilse reddedilir", Teams.rolSebebi(docBaskan, "baskan", kap) !== null &&
+  Teams.rolSebebi(docBaskan, "baskan", kap).indexOf("Prof") !== -1);
+const noProf = Teams.cloneTemplate ? null : Object.assign(JSON.parse(JSON.stringify(kap)), { baskanProf: false });
+check("başkan: Prof şartı kapatılabilir", Teams.rolSebebi(docBaskan, "baskan", noProf) === null);
+
+// 2) Başkan en tecrübeli — ekKisitlar (uygunAdaylar ctx üzerinden)
+const uyeAdayGorevli = aday("m1", "Üye", "M Üni", "Akademik", 3, 3, 0, "YDS 80"); // görev 6
+const uyeSonuc = Teams.uygunAdaylar([uyeAdayGorevli], "akademik", "X Üni", kap, { baskanGorevUst: 5 });
+check("tecrübe: üye başkandan tecrübeli olamaz", uyeSonuc.uygun.length === 0 &&
+  uyeSonuc.red[0].sebep.indexOf("başkandan daha tecrübeli") !== -1);
+const bskAday = aday("b1", "Bşk", "N Üni", "Akademik", 2, 1, 0, "YDS 80"); // görev 3
+const bskSonuc = Teams.uygunAdaylar([bskAday], "baskan", "X Üni", kap, { uyeGorevAlt: 5 });
+check("tecrübe: başkan üyelerden az tecrübeli olamaz", bskSonuc.uygun.length === 0 &&
+  bskSonuc.red[0].sebep.indexOf("daha tecrübeli olmalı") !== -1);
+
+// 3) Vakıf idari yalnızca devlet kurumlarına (aday ve hedef FARKLI kurumlar)
+function uniTurOf(ad) { return (ad === "V1 Üni" || ad === "V2 Üni") ? "Vakıf" : "Devlet"; }
+const vakifIdari = { "TcNo": "vi", "Ad": "İd", "Soyad": "Ar", "Universite": "V1 Üni", "Tip": "İdari", "TkBsk": 0, "AkdGor": 0, "IdrGor": 2 };
+const viVakif = Teams.uygunAdaylar([vakifIdari], "idari", "V2 Üni", kap, { uniTurOf: uniTurOf, kurumTur: "Vakıf" });
+check("vakıf idari: başka vakıf kuruma atanamaz", viVakif.uygun.length === 0 &&
+  viVakif.red[0].sebep.indexOf("yalnızca devlet") !== -1);
+const viDevlet = Teams.uygunAdaylar([vakifIdari], "idari", "D Üni", kap, { uniTurOf: uniTurOf, kurumTur: "Devlet" });
+check("vakıf idari: devlet kuruma atanabilir", viDevlet.uygun.length === 1);
+// Devlet idari her yere gidebilir
+const devletIdari = { "TcNo": "di", "Ad": "İd2", "Soyad": "Ar", "Universite": "D2 Üni", "Tip": "İdari", "TkBsk": 0, "AkdGor": 0, "IdrGor": 2 };
+check("devlet idari: vakıf kuruma atanabilir",
+  Teams.uygunAdaylar([devletIdari], "idari", "V2 Üni", kap, { uniTurOf: uniTurOf, kurumTur: "Vakıf" }).uygun.length === 1);
+
+// autoAssign: başkan diğer tüm üyelerden daha tecrübeli
+const rng2 = rngYap(7);
+const otoB = Teams.autoAssign(havuz, "X Üniversitesi", "kap", "2026-1", kap, { rng: rng2 });
+const tB = otoB.takim;
+if (tB.asil.baskan) {
+  const bg = Teams.gorevSayisi(havuz.find(r => r["TcNo"] === tB.asil.baskan));
+  const digerGorevler = [].concat(tB.asil.akademik, [tB.asil.idari, tB.asil.ogrenci])
+    .filter(Boolean).map(tc => Teams.gorevSayisi(havuz.find(r => r["TcNo"] === tc)));
+  check("oto: başkan en tecrübeli", digerGorevler.every(g => bg > g), { bg, digerGorevler });
+} else check("oto: başkan en tecrübeli", true);
+
+// validateTeam: başkan en tecrübeli değilse uyarı
+const zayifBaskan = Teams.bosTakim("X Üni", "kap", "d", kap);
+zayifBaskan.asil.baskan = "3"; // görev 1
+zayifBaskan.asil.akademik = ["1"]; // görev 7
+const vZ = Teams.validateTeam(zayifBaskan, havuz, {});
+check("doğrulama: başkan tecrübe uyarısı", vZ.some(x => x.indexOf("daha tecrübeli olmalı") !== -1), vZ);
+
+// validateTeam: cinsiyet dengesi uyarısı (gerçek adlarla)
+const cinsHavuz = [
+  aday("c1", "Ahmet", "P1", "Akademik", 5, 5, 0, "YDS 90"),
+  aday("c2", "Mehmet", "P2", "Akademik", 1, 1, 0, "YDS 80"),
+  aday("c3", "Mustafa", "P3", "Akademik", 0, 1, 0, "YDS 80"),
+  aday("c4", "Ali", "P4", "İdari", 0, 0, 1, "")
+];
+const cinsTakim = Teams.bosTakim("X Üni", "kap", "d", kap);
+cinsTakim.asil.baskan = "c1"; cinsTakim.asil.akademik = ["c2", "c3"]; cinsTakim.asil.idari = "c4";
+const vC = Teams.validateTeam(cinsTakim, cinsHavuz, {});
+check("doğrulama: cinsiyet dengesi uyarısı (hepsi erkek)", vC.some(x => x.indexOf("Cinsiyet dengesi") !== -1), vC);
+
 console.log("\nSonuç: " + passed + " başarılı, " + failed + " başarısız.");
 process.exit(failed ? 1 : 0);

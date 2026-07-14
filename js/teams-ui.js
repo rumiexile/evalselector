@@ -113,6 +113,10 @@
     $("s-max-yeni").value = s.maxYeni;
     $("s-yedek").value = s.yedekSayisi;
     $("s-ayni-kurum").checked = s.ayniKurumTek;
+    $("s-baskan-prof").checked = s.baskanProf;
+    $("s-baskan-tecrube").checked = s.baskanEnTecrubeli;
+    $("s-vakif-idari").checked = s.vakifIdariDevletSinir;
+    $("s-cinsiyet").checked = s.cinsiyetDenge;
     $("t-toplam").textContent = "— takım büyüklüğü: " + Teams.takimBuyuklugu(s) + " kişi (başkan dâhil)";
   }
 
@@ -151,6 +155,10 @@
     num("s-max-yeni", "maxYeni");
     num("s-yedek", "yedekSayisi");
     chk("s-ayni-kurum", "ayniKurumTek");
+    chk("s-baskan-prof", "baskanProf");
+    chk("s-baskan-tecrube", "baskanEnTecrubeli");
+    chk("s-vakif-idari", "vakifIdariDevletSinir");
+    chk("s-cinsiyet", "cinsiyetDenge");
 
     $("btn-sablon-reset").addEventListener("click", function () {
       T.sablonlar[T.aktifTur] = Teams.defaultTemplate(T.aktifTur);
@@ -171,6 +179,8 @@
     var n = TextParse.norm(ad);
     return tumKurumlar().find(function (k) { return TextParse.norm(k.ad) === n; }) || null;
   }
+  // Üniversite türü ("Devlet" | "Vakıf" | null); vakıf-idari kuralında kullanılır.
+  function uniTurOf(ad) { var k = kurumBilgi(ad); return k ? k.tur : null; }
 
   // Şehir (+ Türkiye dışıysa ülke) gösterimi
   function yerBilgisi(k) {
@@ -306,7 +316,8 @@
 
   function autoBuild(kurum) {
     var sonuc = Teams.autoAssign(pool(), kurum, T.aktifTur, T.donem, template(), {
-      coiMap: T.coi, atananlar: bagliTcler({ haricKurum: kurum })
+      coiMap: T.coi, atananlar: bagliTcler({ haricKurum: kurum }),
+      uniTurOf: uniTurOf, kurumTur: uniTurOf(kurum)
     });
     T.takimlar[kurum] = sonuc.takim;
     return sonuc.uyarilar;
@@ -613,7 +624,7 @@
         govde.innerHTML = tbl;
         card.appendChild(govde);
 
-        var uyarilar = Teams.validateTeam(takim, pool(), { coiMap: T.coi, digerTakimTcler: bagliTcler({ haricKurum: kurum }) });
+        var uyarilar = Teams.validateTeam(takim, pool(), { coiMap: T.coi, digerTakimTcler: bagliTcler({ haricKurum: kurum }), uniTurOf: uniTurOf, kurumTur: uniTurOf(kurum) });
         var udiv = document.createElement("div");
         udiv.className = "team-uyari " + (uyarilar.length ? "" : "team-uygun");
         udiv.innerHTML = uyarilar.length
@@ -730,19 +741,35 @@
       Teams.asilTcleri(takim).forEach(function (tc) { if (idx[tc]) takimKurumlari.push(idx[tc]["Universite"]); });
       var kurumF = s.ayniKurumTek ? takimKurumlari : null;
 
+      // Vakıf-idari ve tecrübe kısıtları için ek bağlam
+      function gorevOf(tc) { return idx[tc] ? Teams.gorevSayisi(idx[tc]) : 0; }
+      var ekCtx = { uniTurOf: uniTurOf, kurumTur: uniTurOf(kurum) };
+      if (s.baskanEnTecrubeli) {
+        if (rol === "baskan") {
+          var digerMax = -1;
+          takim.asil.akademik.forEach(function (tc) { if (tc) digerMax = Math.max(digerMax, gorevOf(tc)); });
+          if (takim.asil.idari) digerMax = Math.max(digerMax, gorevOf(takim.asil.idari));
+          if (takim.asil.ogrenci) digerMax = Math.max(digerMax, gorevOf(takim.asil.ogrenci));
+          if (digerMax >= 0) ekCtx.uyeGorevAlt = digerMax;
+        } else if (takim.asil.baskan) {
+          ekCtx.baskanGorevUst = gorevOf(takim.asil.baskan);
+        }
+      }
+      function ctxIle(base) { Object.keys(ekCtx).forEach(function (k) { base[k] = ekCtx[k]; }); return base; }
+
       // 1) Bu türün yedek havuzundan, bu takıma uygun olanlar
       var yedekRows = (havuzOf(turId)[rol] || []).map(function (tc) { return idx[tc]; }).filter(Boolean);
-      var yedekSonuc = Teams.uygunAdaylar(yedekRows, rol, kurum, s, {
+      var yedekSonuc = Teams.uygunAdaylar(yedekRows, rol, kurum, s, ctxIle({
         coiMap: T.coi, takimTcler: Teams.takimTcleri(takim), takimKurumlari: kurumF
-      });
+      }));
       if (yedekSonuc.uygun.length) gruplar.push({ etiket: "Yedek havuzundan", rows: puanSirala(yedekSonuc.uygun), kaynak: "yedek" });
       elenen = elenen.concat(yedekSonuc.red.map(function (r) { return { row: r.row, sebep: "Yedek — " + r.sebep }; }));
 
       // 2) Değerlendirici havuzundan (henüz hiçbir yere bağlı olmayanlar)
-      var freshSonuc = Teams.uygunAdaylar(pool(), rol, kurum, s, {
+      var freshSonuc = Teams.uygunAdaylar(pool(), rol, kurum, s, ctxIle({
         coiMap: T.coi, atananlar: bagliTcler({ haricKurum: kurum }),
         takimTcler: Teams.takimTcleri(takim), takimKurumlari: kurumF
-      });
+      }));
       gruplar.push({ etiket: "Değerlendirici havuzundan (yeni)", rows: puanSirala(freshSonuc.uygun), kaynak: "havuz" });
       elenen = elenen.concat(freshSonuc.red);
 
@@ -976,7 +1003,7 @@
       tk.asil.akademik.forEach(function (tc) { if (tc) satirlar.push(kisiSatiri(tk.donem, tk.turId, kurum, "akademik", tc, "Asil")); });
       if (tk.asil.idari) satirlar.push(kisiSatiri(tk.donem, tk.turId, kurum, "idari", tk.asil.idari, "Asil"));
       if (tk.asil.ogrenci) satirlar.push(kisiSatiri(tk.donem, tk.turId, kurum, "ogrenci", tk.asil.ogrenci, "Asil"));
-      var uyarilar = Teams.validateTeam(tk, pool(), { coiMap: T.coi, digerTakimTcler: bagliTcler({ haricKurum: kurum }) });
+      var uyarilar = Teams.validateTeam(tk, pool(), { coiMap: T.coi, digerTakimTcler: bagliTcler({ haricKurum: kurum }), uniTurOf: uniTurOf, kurumTur: uniTurOf(kurum) });
       ozet.push({
         "Kurum": kurum, "Değerlendirme Türü": turAdi(tk.turId), "Dönem": tk.donem || T.donem,
         "Takım Büyüklüğü (şablon)": Teams.takimBuyuklugu(tk.sablon),

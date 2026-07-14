@@ -205,6 +205,16 @@ puanı 80'dir.
 | İlk kez görev alacak üye: en az / en fazla | 1 / 2 | 8/8 (öğrenciler sayım dışı tutulur) |
 | Aynı üniversiteden en fazla bir üye | Açık | Coğrafi/alan dengesi (8/4) sadeleştirmesi |
 | Yedek havuzu — rol başına kişi | 1 | Türe bağlı ortak yedek havuzunun otomatik doldurma miktarı |
+| Takım başkanı Prof. Dr. olmalı | Açık | Kullanıcı gereksinimi |
+| Takım başkanı en tecrübeli üye olmalı | Açık | Başkan görev sayısı > diğer tüm üyeler |
+| Vakıf idari yalnızca devlet kurumlarına | Açık | Vakıf üniversitesi mensubu idari değerlendirici başka bir vakıf kuruma atanamaz |
+| Cinsiyet dengesi gözetilsin | Açık (yumuşak) | Ada göre tahmini; kadın/erkek sayısı eşite yakın olmalı |
+
+> Vakıf/Devlet ayrımı gömülü üniversite listesindeki tür bilgisinden okunur;
+> kurum listede yoksa (elle eklenen ya da tanınmayan) kural uygulanmaz.
+> Başkan **önce** seçilir; diğer üyeler başkandan daha az tecrübeli olacak
+> biçimde atanır. Cinsiyet dengesi otomatik kurulumda yumuşak tercih olarak
+> uygulanır (eksik cinsiyet öncelenir) ve sağlanamazsa uyarı üretilir.
 
 "İlk kez görev alacak" tespiti: `TkBsk + AkdGor + IdrGor = 0`.
 

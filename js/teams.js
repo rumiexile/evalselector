@@ -36,7 +36,11 @@
     minYeni: 1,          // ilk kez görev alacak asgari üye sayısı
     maxYeni: 2,          // ilk kez görev alacak azami üye sayısı
     ayniKurumTek: true,  // aynı üniversiteden en fazla bir üye
-    yedekSayisi: 1       // rol başına yedek sayısı
+    yedekSayisi: 1,      // rol başına yedek sayısı
+    baskanProf: true,    // takım başkanı Prof. Dr. olmalı
+    baskanEnTecrubeli: true,     // başkan diğer tüm üyelerden daha tecrübeli olmalı
+    vakifIdariDevletSinir: true, // vakıf idari değerlendirici yalnızca devlet kurumlarına
+    cinsiyetDenge: true          // kadın/erkek üye sayısı mümkün mertebe eşit (yumuşak kural)
   };
 
   var TYPE_TEMPLATES = {
@@ -113,6 +117,10 @@
     var tip = tipOf(row);
     if (rol === "baskan") {
       if (tip !== "akademik") return "Takım başkanı akademik değerlendirici olmalıdır.";
+      if (template.baskanProf) {
+        var bu = TP.parseUnvan(row["AkademikUnvan"]);
+        if (!bu || bu.seviye !== 1) return "Takım başkanı Prof. Dr. unvanına sahip olmalıdır.";
+      }
       if (gorevSayisi(row) < template.bskMinGorev) {
         return "Görev sayısı yetersiz (" + gorevSayisi(row) + " / en az " + template.bskMinGorev + ").";
       }
@@ -133,9 +141,34 @@
     return null;
   }
 
+  // Kurum türü / tecrübe kısıtları (aday + hedef kurum bağlamı gerektirir).
+  // ctx: uniTurOf(uniAd)->"Devlet"|"Vakıf"|null, kurumTur, uyeGorevAlt, baskanGorevUst
+  function ekKisitlar(row, rol, kurum, template, ctx) {
+    // 1) Vakıf üniversitesinden idari değerlendirici yalnızca devlet kurumlarına
+    if (template.vakifIdariDevletSinir && tipOf(row) === "idari" && ctx.uniTurOf) {
+      var adayTur = ctx.uniTurOf(row["Universite"]);
+      var hedefTur = ctx.kurumTur !== undefined ? ctx.kurumTur : ctx.uniTurOf(kurum);
+      if (adayTur === "Vakıf" && hedefTur === "Vakıf") {
+        return "Vakıf üniversitesinden idari değerlendirici yalnızca devlet üniversitelerine atanabilir.";
+      }
+    }
+    // 2) Başkan diğer tüm üyelerden daha tecrübeli olmalı
+    if (template.baskanEnTecrubeli) {
+      var g = gorevSayisi(row);
+      if (rol === "baskan" && ctx.uyeGorevAlt != null && g <= ctx.uyeGorevAlt) {
+        return "Başkan diğer üyelerden daha tecrübeli olmalı (görev " + g + " ≤ üye en yüksek " + ctx.uyeGorevAlt + ").";
+      }
+      if (rol !== "baskan" && ctx.baskanGorevUst != null && g >= ctx.baskanGorevUst) {
+        return "Üye, başkandan daha tecrübeli olamaz (görev " + g + " ≥ başkan " + ctx.baskanGorevUst + ").";
+      }
+    }
+    return null;
+  }
+
   // ---- Uygun aday listesi ------------------------------------------------
   // ctx: { coiMap, atananlar:Set(tc — dönemde başka takımlarda asil VEYA yedek görevli),
-  //        takimTcler:Set(tc — bu takımda), takimKurumlari:[üniversite adları — ayniKurumTek için] }
+  //        takimTcler:Set(tc — bu takımda), takimKurumlari:[üniversite adları — ayniKurumTek için],
+  //        uniTurOf, kurumTur, uyeGorevAlt, baskanGorevUst (bkz. ekKisitlar) }
   // Bir kişi dönem içinde tek görev alabilir; asil ya da yedek olması fark etmez.
   // Dönen değer: {uygun: [row...], red: [{row, sebep}...]}
   function uygunAdaylar(pool, rol, kurum, template, ctx) {
@@ -147,7 +180,7 @@
       var sebep = null;
       if (ctx.takimTcler && ctx.takimTcler.has(tc)) sebep = "Bu takımda zaten görevli.";
       else if (ctx.atananlar && ctx.atananlar.has(tc)) sebep = "Bu dönemde başka bir takımda görevli (asil/yedek); aynı anda tek görev alınabilir.";
-      else sebep = coiSebebi(row, kurum, ctx.coiMap) || rolSebebi(row, rol, template);
+      else sebep = coiSebebi(row, kurum, ctx.coiMap) || rolSebebi(row, rol, template) || ekKisitlar(row, rol, kurum, template, ctx);
       if (!sebep && template.ayniKurumTek && ctx.takimKurumlari) {
         var u = TP.norm(row["Universite"]);
         if (u && ctx.takimKurumlari.some(function (k) { return TP.norm(k) === u; })) {
@@ -196,7 +229,10 @@
   }
 
   // Otomatik (rastlantısal) takım kurulumu — yalnızca asil kadro kurulur.
-  // opts: { coiMap, atananlar:Set(dönemde görevli/yedek havuzunda bulunan tüm tc'ler), rng }
+  // Sıra: akademik/idari/öğrenci üyeler → en son başkan (diğerlerinden daha
+  // tecrübeli ve Prof. Dr. olacak biçimde). Cinsiyet dengesi yumuşak biçimde
+  // gözetilir (eksik cinsiyet tercih edilir).
+  // opts: { coiMap, atananlar:Set, rng, uniTurOf, kurumTur }
   // Dönen değer: { takim, uyarilar: [metin] }
   function autoAssign(pool, kurum, turId, donem, template, opts) {
     opts = opts || {};
@@ -206,30 +242,54 @@
     var index = {};
     (pool || []).forEach(function (r) { var tc = tcOf(r); if (tc) index[tc] = r; });
 
-    function ctx() {
+    function ctx(extra) {
       var kurumlar = [];
       asilTcleri(takim).forEach(function (tc) {
         if (index[tc]) kurumlar.push(index[tc]["Universite"]);
       });
-      return {
+      var c = {
         coiMap: opts.coiMap,
         atananlar: opts.atananlar,
         takimTcler: takimTcleri(takim),
-        takimKurumlari: kurumlar
+        takimKurumlari: kurumlar,
+        uniTurOf: opts.uniTurOf,
+        kurumTur: opts.kurumTur
       };
+      if (extra) Object.keys(extra).forEach(function (k) { c[k] = extra[k]; });
+      return c;
     }
 
-    function sec(rol, filtre) {
-      var u = uygunAdaylar(pool, rol, kurum, template, ctx()).uygun;
+    // Mevcut asil üyeler arasında cinsiyet sayımı; eksik cinsiyet tercih edilir.
+    function cinsiyetTercih(list) {
+      if (!template.cinsiyetDenge) return list;
+      var k = 0, e = 0;
+      asilTcleri(takim).forEach(function (tc) {
+        var r = index[tc]; if (!r) return;
+        var g = TP.cinsiyetTahmin(r["Ad"]); if (g === "K") k++; else if (g === "E") e++;
+      });
+      var hedef = k < e ? "K" : (e < k ? "E" : null);
+      if (!hedef) return list;
+      return list.slice().sort(function (a, b) {
+        return (TP.cinsiyetTahmin(a["Ad"]) === hedef ? 0 : 1) - (TP.cinsiyetTahmin(b["Ad"]) === hedef ? 0 : 1);
+      });
+    }
+
+    function sec(rol, filtre, extra) {
+      var u = uygunAdaylar(pool, rol, kurum, template, ctx(extra)).uygun;
       if (filtre) u = u.filter(filtre);
       var karisik = shuffle(u, rng);
+      // Cinsiyet dengesi tercihi tüm üye rollerinde (başkan hariç) uygulanır
+      if (rol !== "baskan") karisik = cinsiyetTercih(karisik);
       return karisik.length ? karisik[0] : null;
     }
 
-    // Başkan
+    // Başkan önce seçilir (Prof. Dr. + asgari görev). Diğer üyeler, başkandan
+    // daha az tecrübeli olacak biçimde (baskanGorevUst) sonra seçilir.
     var bsk = sec("baskan");
     if (bsk) takim.asil.baskan = tcOf(bsk);
-    else uyarilar.push("Takım başkanı için uygun aday bulunamadı.");
+    else uyarilar.push("Takım başkanı için uygun aday bulunamadı" +
+      (template.baskanProf ? " (Prof. Dr. + asgari görev koşulu)." : "."));
+    var uyeCtx = (template.baskanEnTecrubeli && bsk) ? { baskanGorevUst: gorevSayisi(bsk) } : null;
 
     // Akademik üyeler: önce ilk kez görev alacaklardan minYeni kadar
     var yeniHedef = Math.min(template.minYeni, template.akademikSayisi);
@@ -237,13 +297,13 @@
     for (var i = 0; i < template.akademikSayisi; i++) {
       var aday = null;
       if (yeniSayisi < yeniHedef) {
-        aday = sec("akademik", isYeni);
+        aday = sec("akademik", isYeni, uyeCtx);
         if (aday) yeniSayisi++;
       }
       if (!aday) {
         // maxYeni aşılmasın: kalan koltuklar için önce deneyimlilerden dene
-        aday = sec("akademik", function (r) { return !isYeni(r); }) ||
-               (yeniSayisi < template.maxYeni ? sec("akademik", isYeni) : null);
+        aday = sec("akademik", function (r) { return !isYeni(r); }, uyeCtx) ||
+               (yeniSayisi < template.maxYeni ? sec("akademik", isYeni, uyeCtx) : null);
         if (aday && isYeni(aday)) yeniSayisi++;
       }
       if (aday) takim.asil.akademik.push(tcOf(aday));
@@ -252,13 +312,13 @@
 
     // İdari / Öğrenci — yeni üst sınırı aşılacaksa önce deneyimli idari denenir
     if (template.idariZorunlu) {
-      var idr = (yeniSayisi >= template.maxYeni ? sec("idari", function (r) { return !isYeni(r); }) : null) ||
-                sec("idari");
+      var idr = (yeniSayisi >= template.maxYeni ? sec("idari", function (r) { return !isYeni(r); }, uyeCtx) : null) ||
+                sec("idari", null, uyeCtx);
       if (idr) { takim.asil.idari = tcOf(idr); if (isYeni(idr)) yeniSayisi++; }
       else uyarilar.push("İdari değerlendirici için uygun aday bulunamadı.");
     }
     if (template.ogrenciZorunlu) {
-      var ogr = sec("ogrenci");
+      var ogr = sec("ogrenci", null, uyeCtx);
       if (ogr) takim.asil.ogrenci = tcOf(ogr);
       else uyarilar.push("Öğrenci değerlendirici için uygun aday bulunamadı.");
     }
@@ -290,6 +350,8 @@
                   ["idari", takim.asil.idari ? [takim.asil.idari] : []],
                   ["ogrenci", takim.asil.ogrenci ? [takim.asil.ogrenci] : []]];
     var yeniSayisi = 0, kurumSayaci = {};
+    var baskanGorev = null, digerGorevMax = -1, cinsK = 0, cinsE = 0;
+    var hedefTur = opts.kurumTur !== undefined ? opts.kurumTur : (opts.uniTurOf ? opts.uniTurOf(takim.kurum) : null);
     roller.forEach(function (pair) {
       var rol = pair[0];
       pair[1].forEach(function (tc) {
@@ -302,12 +364,32 @@
         if (opts.digerTakimTcler && opts.digerTakimTcler.has(tc)) {
           uyarilar.push(adEtiketi(row, tc) + ": bu dönemde başka bir takımda görevli (aynı anda tek görev alınabilir).");
         }
+        // Vakıf üniversitesinden idari değerlendirici yalnızca devlet kurumlarına
+        if (t.vakifIdariDevletSinir && rol === "idari" && opts.uniTurOf &&
+            opts.uniTurOf(row["Universite"]) === "Vakıf" && hedefTur === "Vakıf") {
+          uyarilar.push(adEtiketi(row, tc) + ": vakıf üniversitesinden idari değerlendirici yalnızca devlet kurumlarına atanabilir.");
+        }
+        // Tecrübe ve cinsiyet toplamları
+        var g = gorevSayisi(row);
+        if (rol === "baskan") baskanGorev = g; else digerGorevMax = Math.max(digerGorevMax, g);
+        var cg = TP.cinsiyetTahmin(row["Ad"]);
+        if (cg === "K") cinsK++; else if (cg === "E") cinsE++;
         // Öğrenci değerlendiriciler "ilk kez görev" sayımına dahil edilmez
         if (rol !== "ogrenci" && isYeni(row)) yeniSayisi++;
         var u = TP.norm(row["Universite"]);
         if (u) kurumSayaci[u] = (kurumSayaci[u] || 0) + 1;
       });
     });
+
+    // Başkan diğer tüm üyelerden daha tecrübeli olmalı
+    if (t.baskanEnTecrubeli && baskanGorev !== null && digerGorevMax >= 0 && baskanGorev <= digerGorevMax) {
+      uyarilar.push("Takım başkanı diğer üyelerden daha tecrübeli olmalı (başkan görev " + baskanGorev +
+        " ≤ en yüksek üye görevi " + digerGorevMax + ").");
+    }
+    // Cinsiyet dengesi (ada göre tahmini; yumuşak kural)
+    if (t.cinsiyetDenge && (cinsK + cinsE) > 0 && Math.abs(cinsK - cinsE) > 1) {
+      uyarilar.push("Cinsiyet dengesi zayıf (ada göre tahmini): kadın " + cinsK + " / erkek " + cinsE + ".");
+    }
 
     // Aynı kişi bu takımda birden fazla koltukta yer alamaz
     var sayim = {};

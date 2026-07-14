@@ -21,26 +21,8 @@
   function sayi(v) { var n = TP.parseSayi(v); return n === null ? 0 : n; }
   function pct(v, t) { return t ? Math.round((v / t) * 1000) / 10 : 0; }
 
-  // ---- İsimden cinsiyet tahmini (yalnızca kesin cinsiyetli yaygın adlar) ----
-  var KADIN = ("Ayşe Fatma Emine Hatice Zeynep Elif Meryem Şeyma Merve Selin Pınar Gülay Nurcan Ceren Aslı " +
-    "Büşra Ebru Derya Nesrin Tuğba Yasemin Gamze Esra Melis Dilek Sibel Nilüfer Handan Gizem Sevgi Sevil " +
-    "Hülya Şule Aysun Aynur Filiz Gül Gülşah Havva İpek Kübra Leyla Melek Nazlı Özlem Rabia Sena Songül " +
-    "Tuba Yeliz Zehra Betül Cansu Damla Duygu Ecem Eda Hande İlknur Rana Sıla Simge Şevval Tülay Yağmur Fadime").split(/\s+/);
-  var ERKEK = ("Ahmet Mehmet Mustafa Ali Hüseyin Hasan İbrahim Osman Yusuf Murat Ömer Emre Burak Kemal Serkan " +
-    "Okan Hakan Kaan Onur Volkan Cem Barış Furkan Selim Erdem Tolga Uğur Sinan Levent Abdullah Adem Bekir " +
-    "Bülent Cihan Ekrem Enes Ercan Erhan Erkan Ertuğrul Fatih Ferhat Gökhan Halil Harun İsmail Kadir Koray " +
-    "Metin Nuri Oğuz Orhan Ramazan Recep Süleyman Tarık Taner Turgut Yavuz Zeki Alper Arda Batuhan Berkay " +
-    "Bora Doruk Efe Ege Eren Kerem Mert Poyraz Yiğit Serhat Serdar").split(/\s+/);
-  var cinsIndex = null;
-  function cinsiyet(ad) {
-    if (!cinsIndex) {
-      cinsIndex = {};
-      KADIN.forEach(function (n) { cinsIndex[TP.norm(n)] = "K"; });
-      ERKEK.forEach(function (n) { cinsIndex[TP.norm(n)] = "E"; });
-    }
-    var ilk = TP.norm(ad).split(" ")[0];
-    return cinsIndex[ilk] || "?";
-  }
+  // İsimden cinsiyet tahmini (paylaşımlı; textparse.js)
+  function cinsiyet(ad) { return TP.cinsiyetTahmin(ad); }
 
   // ---- Sayım yardımcıları ----
   function say(rows, anahtar) {
